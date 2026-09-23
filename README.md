@@ -2,7 +2,7 @@
 
 流れてきた情報を、弁護士のように考える。SNSの投稿を法的思考フォーマットの一つである **DRAAW+C** で分解する、ブラウザで動く情報リテラシー教育ゲームです。
 
-**遊ぶ：** （GitHub PagesのURLをここに）
+**遊ぶ：** [（GitHub PagesのURL）](https://koheioshiobnpl.github.io/info-judge/)
 
 ## 何をするゲームか
 
