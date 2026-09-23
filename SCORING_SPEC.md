@@ -12,8 +12,8 @@ DRAAW+C の各文字は次の定義に固定する。出典は書籍『法教育
 |---|---|---|
 | D | Decision | この情報をまずどう判断するか |
 | R | Rule | 調べた法律・ガイドライン・規約・社会規範のうち、この件に適用されるものはどれか |
-| A | Arguments for one side | 発信側の主張と根拠 |
-| A | Arguments for the other side | 相手側（疑う側）の主張と根拠 |
+| A | Arguments for Plaintiff（原告側）→ 本作では発信側 | 発信側の主張と根拠 |
+| A | Arguments for Defendant（被告側）→ 本作では相手側 | 相手側（疑う側）の主張と根拠 |
 | W | World | 広がったとき社会に何が起きるか |
 | C | Conclusion | すべてを重ねて、どう行動するか |
 
