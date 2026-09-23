@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>インフォ・ジャッジ — DRAAW+Cで情報を読み解く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#22304A; --paper:#EEF1F5; --card:#FFFFFF; --line:#D5DBE4; --mut:#66718A;
+  --marker:#FFD84D; --marker-soft:#FFF3C4;
+  --red:#C64530; --red-soft:#FAE6E1;
+  --blue:#2B6CB0; --blue-soft:#E2ECF7;
+  --ok:#2F7D4F; --ok-soft:#E1F1E7;
+  --disp:'Shippori Mincho','Hiragino Mincho ProN','Yu Mincho',serif;
+  --body:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Yu Gothic',system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E6EAF2; --paper:#151A24; --card:#1F2633; --line:#334058; --mut:#9AA5BB;
+    --marker:#E5C23E; --marker-soft:#3E3820;
+    --red:#E8705C; --red-soft:#3A2622;
+    --blue:#6FA3E0; --blue-soft:#22304A;
+    --ok:#5FBF85; --ok-soft:#1F3A2B;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E6EAF2; --paper:#151A24; --card:#1F2633; --line:#334058; --mut:#9AA5BB;
+  --marker:#E5C23E; --marker-soft:#3E3820; --red:#E8705C; --red-soft:#3A2622;
+  --blue:#6FA3E0; --blue-soft:#22304A; --ok:#5FBF85; --ok-soft:#1F3A2B;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--paper);color:var(--ink);line-height:1.8;font-size:16px}
+.wrap{max-width:880px;margin:0 auto;padding:28px 20px 96px}
+.screen{display:none}.screen.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.screen.on{animation:none}}
+h1,h2,h3{font-family:var(--disp);letter-spacing:.02em;line-height:1.35}
+h1{font-size:2.1rem}h2{font-size:1.45rem}h3{font-size:1.1rem}
+.eyebrow{font-size:.74rem;font-weight:700;letter-spacing:.2em;color:var(--mut);text-transform:uppercase}
+.btn{display:inline-block;font-family:var(--body);font-weight:700;font-size:1rem;color:#fff;background:var(--ink);
+  border:none;border-radius:6px;padding:12px 28px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+:root[data-theme="dark"] .btn{color:#151A24}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btn{color:#151A24} }
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.btn:focus-visible{outline:3px solid var(--marker);outline-offset:2px}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:14px 0}
+.mark{background:linear-gradient(transparent 55%,var(--marker-soft) 55%)}
+.small{font-size:.86rem;color:var(--mut)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+
+/* タイトル */
+.hero{padding:30px 0 10px}
+.hero p{max-width:640px;margin:14px 0}
+.six{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:22px 0}
+.six div{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 6px;text-align:center}
+.six b{font-family:var(--disp);font-size:1.4rem;display:block}
+.six span{font-size:.72rem;color:var(--mut)}
+@media(max-width:560px){.six{grid-template-columns:repeat(3,1fr)}}
+
+/* シナリオ選択 */
+.sc{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.sc button{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;cursor:pointer;color:var(--ink);font-family:var(--body)}
+.sc button:hover{border-color:var(--ink)}
+.sc .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;margin-bottom:8px}
+.tag.t1{background:var(--red-soft);color:var(--red)} .tag.t2{background:var(--blue-soft);color:var(--blue)} .tag.t3{background:var(--marker-soft);color:#7a5a00}
+.sc h3{margin-bottom:6px}
+.sc .done{font-size:.8rem;color:var(--ok);font-weight:700}
+
+/* 投稿カード */
+.post{border-left:4px solid var(--red);padding-left:16px}
+.post .who{font-weight:700}.post .meta{font-size:.8rem;color:var(--mut)}
+.post .body{margin:8px 0;white-space:pre-wrap}
+.post .stats{font-size:.82rem;color:var(--mut)}
+
+/* 聞き込み */
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+.person{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:left;cursor:pointer;color:var(--ink);font-family:var(--body)}
+.person:hover{border-color:var(--ink)}
+.person.done{opacity:.55;cursor:default}
+.person .who{display:flex;gap:10px;align-items:center}
+.avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none}
+.avatar svg{display:block}
+.spkrow{display:flex;gap:12px;align-items:flex-start}
+.spkface{flex:none;width:64px;height:64px;border-radius:50%;overflow:hidden}
+.spkface:empty{display:none}
+.person .name{font-weight:700}.person .role{font-size:.78rem;color:var(--mut)}
+.person .left{font-size:.78rem;color:var(--blue);margin-top:6px;font-weight:700}
+.speech{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-height:90px}
+.speech .spk{font-weight:700;font-size:.85rem;color:var(--mut);margin-bottom:4px}
+.evi{margin-top:14px}
+.evi ul{list-style:none}
+.evi li{padding:8px 0;border-bottom:1px dashed var(--line);font-size:.92rem}
+.evi .src{display:inline-block;font-size:.72rem;font-weight:700;color:var(--blue);margin-right:8px}
+
+/* Dのメモ・Cでの呼び戻し */
+.dmemo{margin-top:12px;padding:10px 12px;background:var(--card);border:1px dashed var(--line);border-radius:8px}
+.dmemo label{display:block;font-weight:700;font-size:.9rem;margin-bottom:6px}
+.dmemo input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:var(--body);font-size:.95rem;background:var(--paper);color:var(--ink)}
+.dmemo input:disabled{opacity:.7}
+.recall{margin:0 0 12px;padding:10px 12px;background:var(--marker-soft);border-radius:8px;font-size:.92rem}
+.recall b{display:block;font-size:.78rem;color:var(--mut);margin-bottom:4px}
+/* 記録パネル */
+.qgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+.qside{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.hist .htabs{display:flex;gap:6px;margin-bottom:8px}
+.htab{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 2px;font-family:var(--body);font-size:.76rem;font-weight:700;cursor:pointer;color:var(--mut)}
+.htab.sel{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.hpane{font-size:.86rem}
+.hline{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}
+.hline .hf{flex:none;width:28px;height:28px;border-radius:50%;overflow:hidden}
+.hline .hn{font-size:.72rem;font-weight:700;color:var(--mut)}
+.hline .ht{line-height:1.6}
+.hans{padding:6px 0;border-bottom:1px dashed var(--line)}
+.hans b{display:inline-block;width:1.6em;font-family:var(--disp)}
+.hist-toggle{display:none}
+@media(max-width:860px){
+  .qgrid{grid-template-columns:1fr}
+  .qside{position:static;max-height:none;display:none}
+  .qside.open{display:block}
+  .hist-toggle{display:inline-block}
+}
+/* 質問 */
+.askbox{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 12px;animation:pop .2s ease}
+.askbox .who{font-weight:700;margin-bottom:8px}
+.askbox .qs{display:grid;gap:8px}
+.askq{text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;color:var(--ink);font-family:var(--body);font-size:.93rem}
+.askq:hover{border-color:var(--ink)}
+.askq.used{opacity:.45;cursor:default;text-decoration:line-through}
+.confirm{margin-top:10px;background:var(--marker-soft);border-radius:8px;padding:10px 12px;font-size:.92rem;animation:pop .2s ease}
+.confirm .cq{font-weight:700;margin-top:4px}
+.prof{background:var(--paper);border-radius:8px;padding:8px 12px;font-size:.88rem;margin-bottom:6px}
+.prof b{display:block;font-size:.75rem;color:var(--mut);margin-bottom:2px}
+.prof ul{margin-left:18px}
+/* 圧力タイマー */
+.timer{background:var(--red-soft);border:1px solid var(--red);border-radius:10px;padding:10px 14px;margin:0 0 12px;animation:pop .3s ease}
+.timer .tl{font-weight:700;color:var(--red)}
+.tphone{display:inline-block;animation:ring .6s ease-in-out infinite}
+@keyframes ring{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+.tbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0}
+.tfill{height:100%;width:100%;background:var(--red);transition:width .25s linear}
+.react{margin-top:10px;background:var(--marker-soft)}
+/* 会話 */
+.gbubble{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 12px;position:relative}
+.gface{flex:none;width:56px;height:56px;border-radius:50%;overflow:hidden;animation:bob 2.4s ease-in-out infinite}
+.gname{font-size:.78rem;font-weight:700;color:var(--mut);margin-bottom:2px}
+.gbody{font-size:.95rem;line-height:1.8;min-height:1.8em;cursor:pointer}
+.caret{display:inline-block;width:.5em;height:1em;background:var(--ink);vertical-align:-.15em;margin-left:2px;animation:blink .8s steps(1) infinite}
+.typing{cursor:pointer}
+@keyframes blink{50%{opacity:0}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes pop{0%{transform:scale(.97);opacity:.6}100%{transform:scale(1);opacity:1}}
+@keyframes slidein{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.speech{position:relative}
+.speech .spkface{animation:bob 2.4s ease-in-out infinite}
+.speech.talk{animation:pop .25s ease}
+.evi li{animation:slidein .3s ease}
+.opt{animation:pop .2s ease}
+.opts .opt:nth-child(2){animation-delay:.04s}.opts .opt:nth-child(3){animation-delay:.08s}.opts .opt:nth-child(4){animation-delay:.12s}.opts .opt:nth-child(5){animation-delay:.16s}
+.rule.open{animation:pop .2s ease}
+.rule .reasy{margin-top:6px;font-size:.92rem;color:#7a5a00;background:var(--marker-soft);border-radius:6px;padding:6px 10px}
+.person.done .avatar{animation:none}
+@media(prefers-reduced-motion:reduce){.gface,.speech .spkface,.evi li,.opt,.rule.open,.speech.talk{animation:none}}
+/* ルビ */
+ruby{ruby-position:over;ruby-align:center}
+rt{font-size:.5em;color:var(--mut);letter-spacing:-.02em;line-height:1}
+.opt,.guide,.rule,.speech,.post .body{line-height:1.9}
+/* 難易度 */
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}
+.mode{text-align:left;background:var(--card);border:2px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;color:var(--ink);font-family:var(--body)}
+.mode b{display:block;font-family:var(--disp);font-size:1.05rem;margin-bottom:4px}
+.mode span{font-size:.8rem;color:var(--mut);line-height:1.5}
+.mode.sel{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.modebadge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--marker-soft);color:#7a5a00;margin-left:8px;vertical-align:middle}
+@media(max-width:640px){.modes{grid-template-columns:1fr}}
+/* ガイド・用語・記述 */
+.guide{background:var(--marker-soft);border-radius:8px;padding:12px 14px;margin:0 0 12px;font-size:.93rem}
+.guide b{display:block;margin-bottom:4px}
+.gloss{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:8px}
+.gloss details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:.85rem;max-width:100%}
+.gloss summary{cursor:pointer;font-weight:700;color:var(--blue)}
+.gloss p{margin-top:6px;color:var(--ink)}
+.hintbtn{background:transparent;border:1px dashed var(--line);border-radius:8px;padding:8px 12px;font-family:var(--body);color:var(--mut);cursor:pointer;font-size:.85rem;margin-bottom:12px}
+.hintbtn:hover{border-color:var(--ink);color:var(--ink)}
+.write{margin:0 0 14px}
+.write label{display:block;font-weight:700;font-size:.95rem;margin-bottom:6px}
+.write textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--body);font-size:.95rem;line-height:1.7;background:var(--card);color:var(--ink);resize:vertical}
+.write textarea:focus{outline:2px solid var(--marker);border-color:var(--ink)}
+.write .cnt{font-size:.78rem;color:var(--mut);margin-top:4px}
+.write .how{font-size:.88rem;color:var(--mut);margin-bottom:6px;line-height:1.6}
+.write .tmpl{font-size:.88rem;background:var(--marker-soft);border-radius:6px;padding:6px 10px;margin-bottom:6px}
+.write .tmpl b,.write .exam b{display:block;font-size:.72rem;color:var(--mut);margin-bottom:2px}
+.write .exam{font-size:.88rem;background:var(--card);border:1px dashed var(--line);border-radius:6px;padding:6px 10px;margin-bottom:8px;color:var(--ink)}
+.written{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:.9rem;white-space:pre-wrap}
+.cmp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:.9rem}
+/* ルール */
+.rules{display:grid;gap:10px}
+.rule{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;text-align:left;color:var(--ink);font-family:var(--body)}
+.rule:hover{border-color:var(--ink)}
+.rt{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;margin-right:8px}
+.rt.law{background:var(--blue-soft);color:var(--blue)} .rt.guide{background:var(--ok-soft);color:var(--ok)} .rt.terms{background:var(--marker-soft);color:#7a5a00} .rt.norm{background:var(--red-soft);color:var(--red)}
+.rule .rs{font-size:.78rem;color:var(--mut)}
+.rule .rtitle{font-weight:700;margin-top:4px}
+.rule .rbody{display:none;margin-top:8px;font-size:.92rem;padding-top:8px;border-top:1px dashed var(--line)}
+.rule.open .rbody{display:block}
+.rule.open{border-color:var(--ink)}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rtoggle{flex:none;font-size:.78rem;font-weight:700;color:var(--blue);border:1px solid var(--blue);border-radius:999px;padding:2px 10px}
+.rule.open .rtoggle{background:var(--blue);color:#fff}
+.rfull{margin-top:8px;font-size:.92rem}
+.rfull b,.reasy b{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:999px;background:var(--ink);color:var(--paper);margin-right:6px;vertical-align:middle}
+.reasy b{background:#7a5a00;color:#fff}
+.rcoach{display:flex;gap:10px;align-items:flex-start;margin-top:10px;background:var(--card);border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:.9rem}
+/* DRAAW+C */
+.rail{display:flex;gap:6px;margin:8px 0 18px}
+.step{flex:1;text-align:center;font-family:var(--disp);font-weight:800;padding:8px 0;border-radius:6px;background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.step.now{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.step.doneS{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.qhead{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}
+.qletter{font-family:var(--disp);font-size:2.4rem;font-weight:800;line-height:1}
+.qname{font-weight:700}.qsub{font-size:.85rem;color:var(--mut)}
+.q{font-size:1.05rem;font-weight:700;margin:10px 0 14px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;color:var(--ink);font-family:var(--body);font-size:.97rem;line-height:1.6}
+.opt:hover{border-color:var(--ink)}
+.opt.sel{border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.opt .box{width:20px;height:20px;border:2px solid var(--line);border-radius:4px;flex:none;margin-top:4px;display:grid;place-items:center;font-size:.8rem}
+.opt.sel .box{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.opt.radio .box{border-radius:50%}
+.fb{margin-top:14px;padding:14px 16px;border-radius:8px;background:var(--blue-soft);font-size:.95rem}
+.fb.good{background:var(--ok-soft)} .fb.bad{background:var(--red-soft)}
+.side-a{color:var(--red)} .side-b{color:var(--blue)}
+
+/* 結果 */
+.score{font-family:var(--disp);font-size:3.2rem;font-weight:800;line-height:1}
+.bars{margin:16px 0}
+.bar{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;margin:8px 0;font-size:.92rem}
+.bar .track{height:12px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;background:var(--ink);border-radius:6px;transition:width .6s ease}
+.bar .fill.m{background:var(--red)}
+.sub{margin-left:20px;font-size:.85rem;color:var(--mut)}
+.verdict{border-left:4px solid var(--ok);padding-left:14px;margin:14px 0}
+@media(max-width:560px){.bar{grid-template-columns:110px 1fr 50px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ===================== タイトル ===================== -->
+<section class="screen on" id="s-title">
+  <div class="hero">
+    <svg viewBox="0 0 120 120" width="92" height="92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="float:right;margin:0 0 8px 12px">
+  <circle cx="60" cy="60" r="58" fill="var(--card)" stroke="var(--line)"/>
+  <path d="M28 108 C30 86 44 78 60 78 C76 78 90 86 92 108 Z" fill="#22304A"/>
+  <path d="M46 78 L60 100 L74 78 Z" fill="#FFFFFF"/><path d="M52 78 L60 92 L68 78 Z" fill="#C64530"/>
+  <ellipse cx="60" cy="56" rx="22" ry="25" fill="#F0CBB0"/>
+  <path d="M36 50 C36 30 48 22 60 22 C72 22 84 30 84 50 C80 38 72 36 60 36 C48 36 40 38 36 50Z" fill="#3B2A22"/>
+  <circle cx="51" cy="58" r="2.6" fill="#2B2B2B"/><circle cx="69" cy="58" r="2.6" fill="#2B2B2B"/>
+  <path d="M46 51 Q51 48 56 51" stroke="#4A3A30" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M64 51 Q69 48 74 51" stroke="#4A3A30" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M53 70 Q60 75 67 70" stroke="#7A4A3A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <g transform="translate(78,74) rotate(-12)"><rect x="0" y="0" width="30" height="22" rx="2" fill="#F4E3B2" stroke="#B89A5A" stroke-width="1.5"/><rect x="4" y="5" width="18" height="2" fill="#B89A5A"/><rect x="4" y="10" width="22" height="2" fill="#B89A5A"/><rect x="4" y="15" width="14" height="2" fill="#B89A5A"/></g>
+</svg>
+    <div class="eyebrow">Information Health × Legal Thinking</div>
+    <h1>インフォ・ジャッジ</h1>
+    <p><span class="mark">流れてきた情報を、弁護士のように考える。</span><br>
+    SNSで見かけた投稿を、法的思考フォーマットの一つである <b>DRAAW+C</b> で分解します。DRAAW+Cでは、結論を出す前に、自分の側と相手側の両方の論拠を組み立てます。証拠を集め、関わる法律や規範を調べ、両側の言い分と根拠を並べてから、自分で結論を出す練習です。</p>
+    <div class="six">
+      <div><b>D</b><span>Decision<br>判断</span></div>
+      <div><b>R</b><span>Rule<br>ルール</span></div>
+      <div><b>A</b><span>Arguments<br>発信側</span></div>
+      <div><b>A</b><span>Arguments<br>相手側</span></div>
+      <div><b>W</b><span>World<br>社会への影響</span></div>
+      <div><b>C</b><span>Conclusion<br>結論と行動</span></div>
+    </div>
+    <p class="small">DRAAW+Cは、書籍『法教育の教え方と学び方 クリティカル・シンキングのすすめ』（コリン・シール著、太田勝造監訳、堀口愛芽紗・大塩浩平訳、弘文堂）において、コリン・シール氏がthinkLawプログラムで用いている法的思考フレームワークです。3つのシナリオはいずれも創作で、元になった公開事例と改変箇所は同梱の SCENARIO_SOURCES.md に記載しています。所要時間は1シナリオ約6分。</p>
+    <button class="btn" onclick="go('s-select')">はじめる</button>
+  </div>
+</section>
+
+<!-- ===================== シナリオ選択 ===================== -->
+<section class="screen" id="s-select">
+  <div class="eyebrow">Scenario</div>
+  <h2>どの投稿を読み解く？</h2>
+  <p class="small" style="margin:8px 0 10px">まず難易度を選び、次に投稿を選びます。初めてならイージーから。慣れたらノーマルへ。3本とも解くと、総合結果が出ます。</p>
+  <div class="modes" id="modes">
+    <button class="mode sel" data-m="easy" onclick="setMode('easy')"><b>イージー</b><span>中学生以上推奨。難しい漢字にふりがな、用語の解説と考え方のガイドが常に出る。選択は4択から1つ</span></button>
+    <button class="mode" data-m="normal" onclick="setMode('normal')"><b>ノーマル</b><span>中学生〜高校生推奨。ヒントは「見る」を押したときだけ。選択は複数可。標準の採点</span></button>
+    <button class="mode" data-m="hard" onclick="setMode('hard')"><b>ハード</b><span>高校生以上推奨。授業・グループ向け。ヒントなしで各段階を自分の言葉で書く。書いたものを読み合う相手がいて効果が出る。同じシナリオをイージーかノーマルで一度解くと開く</span></button>
+  </div>
+  <div class="card" id="lockNote" style="display:none;background:var(--marker-soft)"></div>
+  <div class="sc" id="scList"></div>
+  <div class="card" id="totalCard" style="display:none"></div>
+</section>
+
+<!-- ===================== 聞き込み ===================== -->
+<section class="screen" id="s-inv">
+  <div class="eyebrow" id="invEyebrow"></div>
+  <h2 id="invTitle"></h2>
+  <div class="card post" id="postCard"></div>
+  <h3 style="margin-top:18px">まわりの人に話を聞く</h3>
+  <p class="small" id="invLead"><b style="color:var(--ink)">下の3人のうち、誰かをクリックして話を聞いてみよう。</b>一人につき3回まで。<span id="askNote"></span>合計6件以上の証拠を集めると、ルール調べに進めます。</p>
+  <div class="people" id="people"></div>
+  <div class="askbox" id="askbox" style="display:none"></div>
+  <div class="speech" id="speech" style="display:none"><div class="spkrow"><div class="spkface" id="speechFace"></div><div><div class="spk">—</div><div id="speechBody">誰かをクリックして話を聞いてみよう。</div></div></div></div>
+  <div class="evi card">
+    <div class="row"><b>集めた証拠</b><span class="small" id="eviCount">0件</span><span class="spacer"></span><span class="small" id="needTxt">あと6件で整理に進める</span></div>
+    <ul id="eviList"><li class="small">まだ何もない。</li></ul>
+  </div>
+  <div class="row"><button class="btn ghost" onclick="go('s-select')">戻る</button><span class="spacer"></span><button class="btn" id="toQuiz" disabled onclick="startRules()">ルールを調べる</button></div>
+</section>
+
+
+<!-- ===================== ルールを調べる ===================== -->
+<section class="screen" id="s-rules">
+  <div class="eyebrow" id="rulesEyebrow"></div>
+  <h2>ルールを調べる</h2>
+  <p class="small" style="margin:8px 0 16px"><b style="color:var(--ink)">下のカードの「開く」を押して、中身を読もう。</b>3件以上読むと、DRAAW+Cの整理に進めます。関係のないものも混ざっています。</p>
+  <div id="rulesGuide"></div>
+  <div class="rules" id="rulesList"></div>
+  <div class="row" style="margin-top:14px"><button class="btn ghost" onclick="go('s-inv')">聞き込みに戻る</button><span class="spacer"></span><span class="small" id="rulesCount">0件読んだ</span>&nbsp;&nbsp;<button class="btn" id="toQuiz2" disabled onclick="startQuiz()">DRAAW+Cで整理する</button></div>
+</section>
+
+<!-- ===================== DRAAW+C ===================== -->
+<section class="screen" id="s-quiz">
+  <div class="eyebrow" id="quizEyebrow"></div>
+  <div class="rail" id="rail"></div>
+  <div class="qgrid">
+    <div class="qmain">
+      <div class="card">
+        <div class="qhead"><div class="qletter" id="qLetter">D</div><div><div class="qname" id="qName"></div><div class="qsub" id="qSub"></div></div></div>
+        <div id="guideBox"></div>
+        <div id="writeBox"></div>
+        <div class="q" id="qText"></div>
+        <div class="opts" id="opts"></div>
+        <div class="fb" id="fb" style="display:none"></div>
+        <div class="row" style="margin-top:16px"><button class="btn ghost hist-toggle" onclick="toggleHist()">記録を見る</button><span class="spacer"></span><button class="btn" id="nextBtn" disabled onclick="nextQ()">決める</button></div>
+      </div>
+    </div>
+    <aside class="qside" id="qside">
+      <div class="card hist">
+        <div class="row" style="margin-bottom:8px"><b>ここまでの記録</b><span class="spacer"></span><button class="btn ghost hist-toggle" style="padding:4px 10px;font-size:.8rem" onclick="toggleHist()">閉じる</button></div>
+        <div class="htabs"><button class="htab" onclick="histTab(this,'h-post')">投稿</button><button class="htab sel" onclick="histTab(this,'h-evi')">聞き込み</button><button class="htab" onclick="histTab(this,'h-rules')">ルール</button><button class="htab" onclick="histTab(this,'h-ans')">自分の選択</button></div>
+        <div id="h-post" class="hpane" style="display:none"></div>
+        <div id="h-evi" class="hpane"></div>
+        <div id="h-rules" class="hpane" style="display:none"></div>
+        <div id="h-ans" class="hpane" style="display:none"></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ===================== 結果 ===================== -->
+<section class="screen" id="s-result">
+  <div class="eyebrow">Result</div>
+  <h2 id="resTitle"></h2>
+  <div class="card">
+    <div class="row"><div class="score" id="resScore">0</div><div><div class="small">/ 100点</div><div id="resRank" style="font-weight:700"></div></div></div>
+    <div class="bars" id="bars"></div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+  <div class="card" id="resDetail"></div>
+  <div class="row"><button class="btn ghost" onclick="replay()">同じシナリオをもう一度</button><span class="spacer"></span><button class="btn" onclick="backToSelect()">別のシナリオへ</button></div>
+</section>
+
+</div>
+
+<script>
+/* =====================================================================
+   シナリオデータ（すべて創作。SCENARIO_SOURCES.md 参照）
+   ===================================================================== */
+const SCENARIOS = [
+{
+  id:'health', type:'t1', typeLabel:'誤情報（デマ）', title:'「薬より先に、この粉末」',
+  post:{who:'@natural_life_hk', meta:'投稿から3時間 ・ 2.4万リポスト ・ 8.1万いいね',
+    body:'母の腫瘍が、病院の薬をやめて〇〇粉末を毎朝飲むだけで3か月で消えました。医者は最初信じませんでしたが検査結果を見て黙りました。\n薬に頼る前に、まず自然の力を試してほしい。同じ悩みの人に届きますように🙏\n▶︎ 購入はプロフィールのリンクから',
+    stats:'リンク先：粉末（30日分）9,800円 ／ 販売者は投稿者本人の会社'},
+  people:[
+    {id:'haruka',name:'ハルカ',role:'投稿を見て迷っている友人',ini:'ハ',color:'#C64530',hints:[
+      '母が同じ病気で治療中なの。薬の副作用がつらそうで、これを見せたら「試してみたい」って言い出して…',
+      '投稿の人、フォロワーが12万人もいる。それだけ信頼されてるってことじゃないの？',
+      '主治医には言ってない。「どうせ反対される」って母が言うから。']},
+    {id:'dr',name:'内科医・佐伯',role:'ハルカの母の主治医ではない医師',ini:'佐',color:'#2B6CB0',hints:[
+      '「検査結果を見て黙った」とありますが、腫瘍が自然に小さく見えることはあります。粉末が原因だと示すには比較が要ります。',
+      'この粉末の成分で、人を対象にした査読つきの研究は見つかりませんでした。動物実験の段階のものが一つあるだけです。',
+      '一番心配なのは「薬をやめた」の部分です。効く薬を中断すると、進行が早まる病気があります。']},
+    {id:'ex',name:'元購入者・ミナト',role:'半年前に同じ粉末を買った人',ini:'ミ',color:'#7A5A00',hints:[
+      '買いました。味は悪くない。でも3か月飲んで、健診の数値は何も変わらなかった。',
+      '解約しようとしたら「効果が出るまで6か月は続けないと意味がない」と言われて、もう1回分払った。',
+      '投稿のコメント欄で「効かなかった」と書いたら、翌日には消えてた。良い口コミだけ残ってる。']},
+  ],
+  rules:[
+    {type:'法律',src:'医薬品医療機器等法（薬機法）',t:'承認を受けていないものについて、病気が治る・腫瘍が消えるといった医薬品的な効能効果を広告することは禁じられている',ok:true,
+     body:'薬として国に認められていないものについて、「病気が治る」「腫瘍が消える」と言って宣伝することは、この法律で禁じられている。粉末でも、そう言って売れば対象になる。投稿者が売っている本人なら、この法律は直接その人に当たる。',easy:'「病気が治る」「腫瘍が消える」と言って売っていいのは、国が認めた薬だけ。粉末でそう言ったら法律違反になりうる。'},
+    {type:'法律',src:'健康増進法',t:'食品の健康保持増進効果について、著しく事実に相違する表示や、著しく人を誤認させる表示は禁じられている',ok:true,
+     body:'食べ物の健康効果について、事実とかけ離れたことや、大げさで誤解させることを表示してはいけない、という法律。体験談の形をしていても、売ることにつながる表示なら対象になりうる。',easy:'食べ物の健康効果について、うそや大げさなことを言ってはいけない、という法律。'},
+    {type:'法律',src:'景品表示法（優良誤認表示）',t:'実際より著しく優良であると誤認させる表示は不当表示として禁じられる',ok:true,
+     body:'商品を、本当より「ずっと良い」と思わせる宣伝は禁止。「効く」と言うなら、国は「その証拠を出して」と求めることができて、出せなければ違法な宣伝とみなされる。',easy:'本当よりずっと良いものだと思わせる宣伝は禁止。「効く」と言うなら証拠を出せ、と国が言える。'},
+    {type:'ガイドライン',src:'消費者庁・厚生労働省の注意喚起',t:'「がんが治る」等をうたう健康食品について、治療を中断して健康被害に至る事例への注意喚起が繰り返し出されている',ok:true,
+     body:'国は「健康食品を薬の代わりにして、治療が遅れた人がいる」と何度も呼びかけている。判断の基準は、体験談ではなく、人を対象にした研究や専門機関の見解があるかどうか。',easy:'国が「健康食品で病気は治らない。薬をやめて悪くなった人がいる」と何度も呼びかけている。'},
+    {type:'規約',src:'SNSプラットフォームの規約',t:'多くのSNSは、誤解を招く医療・健康情報や、根拠のない治療効果の主張を規約で制限している',ok:true,
+     body:'細かい運用は会社ごとに違うが、根拠のない「治る」という話は、多くのSNSの規約で制限されていて、通報の対象になる。',easy:'SNSの会社のルールでも、根拠のない「治る」話は禁止されていることが多い。通報できる。'},
+    {type:'社会規範',src:'通念',t:'フォロワーが多い人、リポストが多い投稿は、それだけ信頼されているのだから正しい',ok:false,
+     body:'多くの人がそう感じているが、法律の基準でも科学の基準でもない。数の多さは「たくさんの人が反応した」ことしか示さず、本当かどうかとは関係がない。判断の基準にはならない。',easy:'みんなそう思いがちだけど、人気と本当かどうかは別。判断の基準にはならない。'},
+    {type:'社会規範',src:'医療の慣行',t:'治療方針の変更は主治医と相談してから決める',ok:true,
+     body:'法律ではないが、医療の現場で共有されている約束ごと。「薬をやめる」という選択は、この約束に照らして、主治医に相談してから決めるものになる。判断の基準として使える。',easy:'法律ではないが、「治療を変えるときは先生に相談する」は医療の世界の約束ごと。これは基準になる。'},
+    {type:'法律',src:'著作権法',t:'投稿者の文章や写真を無断で転載することは著作権侵害になりうる',ok:false,
+     body:'文章や写真を勝手に使うことについての法律。この投稿の内容が本当かどうかとは関係がない。',easy:'文章や写真を勝手に使ってはいけない法律。この投稿が本当かどうかとは関係がない。'}
+  ],
+  D:{q:'この投稿を見て、まずどう判断する？',opts:[
+    {t:'体験談だし、フォロワーも多い。信じて母親に教える',s:0,k:'believe',fb:'体験談は「その人に起きたこと」の報告で、原因の証明ではない。フォロワー数は正しさとは別の量。'},
+    {t:'本当かもしれないし嘘かもしれない。判断を保留して確かめる',s:5,k:'hold',fb:'まだ何も確かめていない段階では、決めないのも一つの判断。DRAAW+Cでは、証拠を集め、ルールを調べてから結論を出す順番になっている。'},
+    {t:'明らかにデマ。すぐに「嘘です」と反論を投稿する',s:2,k:'deny',fb:'結論は多分合っている。ただ根拠を並べる前に断定すると、相手を説得できず、自分も同じ型で間違える。'}]},
+  R:{q:'この投稿の真偽を判断するとき、何を拠り所にする？',opts:[
+    {t:'人を対象にした研究や、専門機関の見解があるかどうか',s:15,fb:'医療情報の判断基準はこれ。体験談は入口であって出口ではない。'},
+    {t:'投稿者が商品を売っていて、利益を得る立場かどうか',s:10,fb:'利益相反は強い手がかり。ただし「売っている＝嘘」とは限らないので、研究の有無と組み合わせる。'},
+    {t:'リポスト数や、いいねの多さ',s:0,fb:'拡散量は「多くの人が反応した」ことしか示さない。真偽とは独立。'},
+    {t:'投稿者本人の人柄や、これまでの投稿が誠実そうか',s:3,fb:'誠実な人が間違うこともある。人柄は根拠の代わりにならない。'}]},
+  A:{q:'投稿者側（この粉末を勧める側）の主張と根拠として、検討に値するものを選ぶ（複数可）',opts:[
+    {t:'投稿者の母親に、腫瘍が小さくなるという出来事が実際に起きた可能性はある',ok:true},
+    {t:'既存の治療の副作用で苦しむ人がいて、代替手段を求める切実さには理由がある',ok:true},
+    {t:'動物実験の段階とはいえ、成分に何らかの作用を示した研究が一つ存在する',ok:true},
+    {t:'2.4万人もリポストしているのだから、多くの人が効果を実感しているはずだ',ok:false},
+    {t:'医者が黙ったということは、医学的にも認めたということだ',ok:false}]},
+  B:{q:'相手側（この投稿を疑う側）の主張と根拠として、検討に値するものを選ぶ（複数可）',opts:[
+    {t:'人を対象にした査読つき研究がなく、効果を裏づける証拠が存在しない',ok:true},
+    {t:'投稿者は粉末の販売者であり、投稿で利益を得る立場にある',ok:true},
+    {t:'否定的な口コミが削除されていて、残っている口コミは選別されている',ok:true},
+    {t:'「薬をやめた」ことで治療が遅れ、取り返しのつかない被害が出る恐れがある',ok:true},
+    {t:'SNSに書かれている健康情報は、すべて嘘だと考えるべきだ',ok:false}]},
+  W:{q:'この投稿が8万人に広がったとき、社会に何が起きる？',opts:[
+    {t:'健康への関心が高まるので、全体としては良い影響のほうが大きい',s:0,fb:'関心は高まるかもしれない。だが「薬より粉末」を信じた人の治療が遅れる代償のほうが重い。'},
+    {t:'治療を中断する人や、効かないものにお金を払う人が出る。訂正情報はデマほど広がらない',s:15,fb:'これがW（World）の視点。自分の損得を超えて、社会の誰にしわ寄せが行くかを見る。'},
+    {t:'販売者が儲かるだけで、社会への影響は特にない',s:6,fb:'儲かる人がいる、は正しい。ただ影響が「ない」は楽観的すぎる。健康デマの被害は静かに広がる。'}]},
+  C:{q:'証拠と両側の言い分を踏まえて、あなたの最終行動は？',opts:[
+    {t:'拡散しない。ハルカに「まず主治医に相談してから」と伝え、根拠を一緒に確認する',s:15,k:'hold',fb:'情報を断罪するのでも放置するのでもなく、目の前の人を守る行動に変換できた。'},
+    {t:'効くかもしれないので「薬と併用するなら」と条件つきで勧める',s:5,k:'believe',fb:'優しさは伝わる。だが「効く根拠がない」ことに変わりはなく、9,800円の負担と期待だけが残る。'},
+    {t:'関わると面倒なので、何も言わない',s:0,k:'none',fb:'沈黙も選択。ただ、ここまで読み解いたあとに「知らなかった」はもう使えない。'}]},
+  correctD:'hold', correctC:'hold',
+  verdict:'この投稿は、効果の根拠がない商品を、販売者自身が体験談の形で広めているものです。体験談が嘘だとは限りませんが、それが効果の証明にならないこと、否定的な声が消されていること、そして「薬をやめる」という行動の危険を、両側の論拠を並べたうえで見抜けたかが問われました。'
+},
+{
+  id:'bridge', type:'t2', typeLabel:'未確認情報', title:'「〇〇大橋が崩落しました」',
+  post:{who:'@sora_0921（一般ユーザー）', meta:'地震発生から14分後 ・ 1.1万リポスト',
+    body:'【拡散希望】さっきの地震で〇〇大橋が崩落しました！！ 車が何台も落ちてるって友達から連絡きた。絶対近づかないで！！\n（画像：傾いた橋げたの写真）',
+    stats:'画像は投稿者が撮影したものではなく、出典の記載なし'},
+  people:[
+    {id:'mom',name:'母',role:'橋の向こう側に住んでいる',ini:'母',color:'#C64530',hints:[
+      '揺れは大きかったけど、家は大丈夫。橋のことは知らない、テレビはまだ地震速報だけ。',
+      '近所の人が「橋が落ちたらしい」って言ってた。でもその人もスマホで見ただけだって。',
+      '迎えに来るなら橋を通るでしょう？ 落ちてるなら来ないで。落ちてないなら来てほしい。どっちなの。']},
+    {id:'road',name:'道路管理者の公式アカウント',role:'国道事務所',ini:'道',color:'#2B6CB0',hints:[
+      '【地震発生から20分後】管内の橋梁について点検を開始しました。安全が確認されるまで通行止めとします。',
+      '【35分後】〇〇大橋は点検中です。崩落の事実は現時点で確認していません。SNS上の情報にご注意ください。',
+      '【50分後】〇〇大橋の点検が完了しました。目視で異常なし。通行止めは継続し、詳細点検後に解除します。']},
+    {id:'friend',name:'カズキ',role:'画像検索が得意な友人',ini:'カ',color:'#7A5A00',hints:[
+      'その橋げたの写真、画像検索したら3年前の海外のニュース記事に同じものがあった。今日の写真じゃない。',
+      '「友達から連絡きた」って書いてあるけど、その友達が誰かはどこにも書いてない。伝聞の伝聞。',
+      'ただ、投稿者が嘘をついてるとも限らない。本気で心配して、見た情報をそのまま流しただけかもしれない。']},
+  ],
+  rules:[
+    {type:'法律',src:'刑法（偽計業務妨害罪）',t:'虚偽の情報を流して業務を妨害した者は処罰される。過去の地震で、動物が逃げたという虚偽の投稿をした人が逮捕された例がある',ok:true,
+     body:'ただし、罪になるのは「わざと」うそを流した場合。本当だと信じて善意で広めた人は、原則として対象にならない。投稿者が罪になるかどうかと、投稿が事実かどうかは、別々に考える。',easy:'うそを流して仕事のじゃまをすると罪になる。ただし「わざと」でなければ罪にはならない。投稿者は本気で信じていたかもしれない。'},
+    {type:'法律',src:'道路法',t:'道路管理者は、道路の破損などで通行が危険な場合に通行を禁止・制限できる',ok:true,
+     body:'橋が使えるかどうかを判断して通行止めにする権限は、道路管理者にある。SNSの投稿者にはない。判断の基準は、この権限を持つ人の発信になる。',easy:'橋を通行止めにできるのは道路管理者だけ。SNSの人にはその権限がない。'},
+    {type:'法律',src:'災害対策基本法',t:'避難の指示や災害情報の発信は市町村長など公的な主体が行う',ok:true,
+     body:'災害のときに避難や危険についての公式な情報を出すのは、市町村など公的な機関だと法律で決まっている。SNSはその情報を早く運ぶことはあるが、情報を生み出す側ではない。',easy:'避難や災害の公式な情報を出すのは市町村など公的な機関、と法律で決まっている。'},
+    {type:'ガイドライン',src:'総務省などの災害時情報の注意喚起',t:'災害時には、公的機関の発信を確認し、出所の分からない情報を拡散しないよう呼びかけられている',ok:true,
+     body:'過去の災害で、うその情報が救助や避難のじゃまになったことがある。そこで国は「確認できない情報は広めないで」と繰り返し呼びかけている。',easy:'国は「災害のときは公式情報を確かめて、出所の分からない話は広めないで」と呼びかけている。'},
+    {type:'規約',src:'SNSプラットフォームの規約',t:'多くのSNSは、災害時の誤情報や、人を危険にさらす虚偽情報を規約で制限している',ok:true,
+     body:'災害のときのうそや、人を危険にさらす情報は、多くのSNSで通報の対象になる。ただし削除は投稿が広がった後になることが多く、広がる速さには追いつかない。',easy:'災害のときのうそは、SNSの会社のルールでも通報できる。でも消されるのは広がった後で、間に合わないことが多い。'},
+    {type:'社会規範',src:'通念',t:'「拡散希望」と書かれた緊急の投稿は、まず広めることが善意の行動である',ok:false,
+     body:'優しさから生まれた考えだが、災害のときにうそが広がる一番の原因でもある。「知らせなきゃ」という気持ちが、確かめることを飛ばさせる。判断の基準にはならない。',easy:'優しさから来る考えだけど、災害のうそが広がる一番の原因でもある。基準にはならない。'},
+    {type:'社会規範',src:'通念',t:'写真が付いている投稿は、文字だけの投稿より信頼できる',ok:false,
+     body:'写真は「何かの写真がある」ことしか示さない。いつ、どこで撮られたかは別に確かめる必要があり、過去の災害では昔の写真が使い回されることが何度も起きている。',easy:'写真があっても、いつどこの写真かは分からない。昔の写真が使い回されることがよくある。'},
+    {type:'法律',src:'個人情報保護法',t:'個人情報の取り扱いに関する法律',ok:false,
+     body:'個人の情報の扱い方についての法律。橋が落ちたかどうかとは関係がない。',easy:'個人の情報の扱い方の法律。橋が落ちたかどうかとは関係がない。'}
+  ],
+  D:{q:'地震直後にこの投稿を見た。まずどう判断する？',opts:[
+    {t:'緊急事態だから、真偽より速さ。すぐにリポストして周りに知らせる',s:0,k:'believe',fb:'善意の拡散が、災害時には一番広がりやすい。「知らせなきゃ」という気持ちは、確認を飛ばす一番の理由になる。'},
+    {t:'本当かもしれないが確認できていない。拡散は保留し、公式情報を探す',s:5,k:'hold',fb:'災害直後の未確認情報は、「まだ分からない」が実際の状態。安全側の行動は取りつつ、拡散は待つ。'},
+    {t:'画像が怪しいので、デマだと断定して「嘘を流すな」と投稿者に返信する',s:2,k:'deny',fb:'画像は確かに怪しい。だが「崩落していない」ことも、この時点では確認できていない。断定は両方向とも早い。'}]},
+  R:{q:'災害時の情報を判断するとき、何を拠り所にする？',opts:[
+    {t:'道路管理者や自治体など、現場を確認する権限のある公的な発信元の情報',s:15,fb:'災害時の一次情報は、現場を確認できる主体からしか出てこない。SNSはその情報を早く運ぶことはあるが、生み出す側ではない。'},
+    {t:'投稿に「拡散希望」と書いてあるかどうか。本人が緊急だと言っているなら信じる',s:0,fb:'「拡散希望」は緊急度の自己申告で、真偽とは無関係。'},
+    {t:'画像があるかどうか。写真つきなら信憑性が高い',s:3,fb:'画像は「何かの写真がある」ことしか示さない。いつどこで撮られたかは別に確かめる必要がある。'},
+    {t:'複数の人が同じことを言っているかどうか',s:6,fb:'一見もっともだが、同じ投稿を見た人が同じことを言っているだけなら、情報源は一つ。'}]},
+  A:{q:'投稿者側（崩落を知らせる側）の主張と根拠として、検討に値するものを選ぶ（複数可）',opts:[
+    {t:'大きな地震の直後で、橋の損傷は現実に起こりうる。危険を知らせる動機は正当だ',ok:true},
+    {t:'投稿者は悪意ではなく、知人からの連絡を信じて善意で流した可能性が高い',ok:true},
+    {t:'公式の発表を待っていたら、その間に橋を渡ろうとする人が出るかもしれない',ok:true},
+    {t:'1.1万人がリポストしているのだから、それだけの人が事実だと確認したということだ',ok:false},
+    {t:'「絶対近づかないで」と書いてあるので、安全のためにはそのまま信じて広めるべきだ',ok:false}]},
+  B:{q:'相手側（この投稿を疑う側）の主張と根拠として、検討に値するものを選ぶ（複数可）',opts:[
+    {t:'添付画像は3年前の海外の写真で、今日の出来事を写したものではない',ok:true},
+    {t:'情報源が「友達からの連絡」で、誰が何を見たのか特定できない伝聞である',ok:true},
+    {t:'道路管理者が点検の上で「崩落は確認していない」と発信している',ok:true},
+    {t:'誤った崩落情報が広がると、迂回による渋滞や救助の遅れなど、別の危険を生む',ok:true},
+    {t:'一般ユーザーの投稿は、災害時にはすべて無視するべきだ',ok:false}]},
+  W:{q:'この投稿が広がったとき、社会に何が起きる？',opts:[
+    {t:'たとえ誤りでも、人々が橋に近づかなくなるので安全側に働く。害はない',s:6,fb:'一部はそうかもしれない。だが迂回で救急車が遅れる、家族が引き返せなくなる、といった別の危険が生まれる。'},
+    {t:'誤情報が救助や避難の判断を狂わせ、公式情報が届きにくくなる。次の災害で「また嘘だろう」と本当の警報が軽視される',s:15,fb:'災害デマの本当の害は、その場の混乱に加えて、公的な警報への信頼を削ることにある。'},
+    {t:'すぐに訂正されるので、大きな影響はない',s:0,fb:'訂正は元の投稿ほど広がらない。地震の直後は、訂正を読む余裕もない。'}]},
+  C:{q:'公式の点検結果まで見た。あなたの最終行動は？',opts:[
+    {t:'拡散はしない。母には道路管理者の発信を伝え、通行止め解除まで橋を使わずに待つ',s:15,k:'hold',fb:'未確認の情報を止め、確認された情報だけを届け、行動は安全側に置く。三つが揃った。'},
+    {t:'崩落は確認されなかったので、母を迎えに橋を通る',s:3,k:'believe',fb:'崩落していないことと、通っていいことは別。通行止めは点検が終わるまで続いている。'},
+    {t:'投稿者に「デマを流すな」と返信して、周囲にもデマだったと広める',s:6,k:'deny',fb:'結果的に誤情報だったが、投稿者は善意だった可能性がある。訂正は公式情報を共有する形で足りる。'}]},
+  correctD:'hold', correctC:'hold',
+  verdict:'この投稿は、悪意ではなく善意から広がった未確認情報です。地震直後という状況では「知らせなければ」という気持ちが確認を飛ばさせます。画像の出典、情報源の特定、公的な発信の三つを確かめるまで判断を保留できたか、そして投稿者を断罪せずに正しい情報を届ける行動を選べたかが問われました。'
+},
+{
+  id:'no1', type:'t3', typeLabel:'ミスリーディング', title:'「顧客満足度No.1」の広告',
+  post:{who:'スマホ学習アプリ「マナビト」公式', meta:'広告 ・ タイムラインに表示',
+    body:'📣 中高生向けオンライン学習アプリ\n★ 顧客満足度 No.1 ★\n★ 保護者の92%が「成績が上がった」と回答 ★\n今なら初月無料！ 迷っているなら、No.1を選べば間違いない。',
+    stats:'画面の下部に小さく「※2025年 当社調べ」'},
+  people:[
+    {id:'parent',name:'ユウトの父',role:'子どもの塾を探している',ini:'父',color:'#C64530',hints:[
+      'No.1って書いてあるなら、少なくとも他よりはいいんだろう。比べる時間もないし、これでいいかと思ってる。',
+      '「92%が成績が上がった」はすごいよね。うちの子も上がるなら月5,000円は安い。',
+      '「当社調べ」って何だろうとは思った。でも嘘は書けないでしょ、広告なんだから。']},
+    {id:'staff',name:'調査会社の元社員・アオイ',role:'広告用アンケートを作っていた',ini:'ア',color:'#2B6CB0',hints:[
+      'こういう調査、私が作ってました。使ったことのない人に各社のサイトを見せて「満足度が高そうなのはどれ？」と印象で選ばせる。それで「満足度No.1」。',
+      '「92%が成績が上がった」は、たぶん利用者アンケートの「上がったと思う」を数えたもの。実際の成績データではないことが多い。',
+      '嘘ではないんです。調査はしている。ただ、読んだ人が思い浮かべる調査と、実際の調査が違う。']},
+    {id:'law',name:'消費者相談員・ナカムラ',role:'消費生活センター勤務',ini:'ナ',color:'#7A5A00',hints:[
+      'No.1表示自体は禁止されていません。ただ、表示に見合った合理的な根拠がないと、景品表示法の不当表示になります。',
+      '2024年に消費者庁が実態調査の報告書を出していて、「利用したことのない人の印象」で満足度No.1を名乗る調査が問題だとはっきり書かれています。',
+      '見分け方は簡単です。誰に、何を、どう聞いた調査なのかが確認できるか。書いていなければ、その表示はまだ信じなくていい。']},
+  ],
+  rules:[
+    {type:'法律',src:'景品表示法 第5条第1号（優良誤認表示）',t:'実際より著しく優良であると誤認させる表示は不当表示として禁じられる。No.1表示自体は禁止されていないが、表示に見合った合理的な根拠がなければ不当表示になる',ok:true,
+     body:'「顧客満足度No.1」と読んだ人が思い浮かべる調査（使った人の評価）と、実際にやった調査（使ったことのない人の印象）が食い違えば、本当より良く見せる宣伝にあたりうる。国はこの種の宣伝に措置命令を出している。',easy:'「No.1」と言うこと自体はOK。でも、その言葉に見合う調査がなければ違法な宣伝になる。'},
+    {type:'法律',src:'景品表示法 第7条第2項（不実証広告規制）',t:'消費者庁は効果や性能の表示について合理的な根拠を示す資料の提出を求めることができ、期限内に提出されなければ不当表示とみなされる',ok:true,
+     body:'証拠を用意するのは宣伝する側。「書けるのだから根拠があるはず」は逆で、根拠がなければ書けないというのが法律の考え方。',easy:'国が「その効果の証拠を出して」と言ったとき、出せなければ違法とみなされる。証拠を用意するのは宣伝する側。'},
+    {type:'ガイドライン',src:'消費者庁「No.1表示に関する実態調査報告書」（2024年9月）',t:'商品を利用したことのない人の印象で「満足度No.1」を名乗る調査手法が問題として指摘され、合理的根拠と認められる調査の要件が整理されている',ok:true,
+     body:'「誰に、何を、どう聞いた調査か」が表示の内容に見合っているかが、認められる条件として整理されている。判断の基準は、それが確認できるかどうか。',easy:'国の調査で「使ったことのない人の印象で満足度No.1と言うのは問題」とはっきり書かれた。'},
+    {type:'法律',src:'特定商取引法（通信販売の表示義務）',t:'定期購入や自動更新の契約では、最終確認画面で契約内容を明確に表示することが義務づけられている',ok:true,
+     body:'「初月無料」のあと自動で有料になる契約は、申し込みの最後の画面で、期間・金額・解約の条件をはっきり見せないといけない。広告が本当かどうかとは別に、契約の入口で確かめる点。',easy:'「初月無料」のあと自動で有料になる契約は、申し込みの最後の画面で金額や解約の条件をはっきり見せないといけない。'},
+    {type:'規約',src:'広告の自主規制（JARO・公正競争規約）',t:'業界団体による広告の自主規制があり、消費者は広告への苦情を申し立てることができる',ok:true,
+     body:'法律とは別に、広告業界の中にもルールがある。表示に疑問があるとき、消費生活センターや広告審査機構に相談できる。',easy:'法律とは別に、広告業界の中にもルールがあって、変な広告は相談・苦情を出せる。'},
+    {type:'社会規範',src:'通念',t:'広告なのだから多少の誇張は当たり前で、消費者もそれを織り込んで読んでいる',ok:false,
+     body:'そう思っている人は多いが、法律はそう考えていない。表示に見合う根拠がなければ違法で、「広告だから」は言い訳にならない。判断の基準にはならない。',easy:'そう思う人は多いけど、法律は「広告だから」を言い訳にさせない。基準にはならない。'},
+    {type:'社会規範',src:'業界の慣行',t:'「※当社調べ」と小さく注記すれば、調査の中身を示さなくてもよい',ok:false,
+     body:'注記は「調査があった」ことしか示さない。中身が確認できなければ根拠にならず、国の報告書もここを問題にしている。業界の慣れとして広まっているが、基準にはならない。',easy:'「当社調べ」と書けば済む、は業界の慣れ。中身が分からなければ根拠にならない。'},
+    {type:'法律',src:'刑法（名誉毀損罪）',t:'公然と事実を摘示して人の名誉を毀損した者は処罰される',ok:false,
+     body:'人の評判を落とす発言についての罪。広告の表示が適切かどうかとは関係がない。',easy:'人の評判を落とすことを言ったときの罪。広告が正しいかどうかとは関係がない。'}
+  ],
+  D:{q:'この広告を見て、まずどう判断する？',opts:[
+    {t:'No.1と書けるのだから、それなりの根拠があるはず。候補の筆頭にする',s:0,k:'believe',fb:'「書けるのだから根拠がある」は逆。根拠を確かめる責任は表示する側にあるが、それが守られているとは限らない。'},
+    {t:'No.1が何のNo.1なのか分からない。調査の中身を確かめてから判断する',s:5,k:'hold',fb:'表示が嘘とは限らない。ただ「誰に何を聞いた結果か」を確かめるまでは、判断材料にならない。'},
+    {t:'No.1広告は全部インチキ。このアプリは候補から外す',s:2,k:'deny',fb:'根拠のあるNo.1表示も存在する。「全部」で切ると、判断の型そのものを放棄している。'}]},
+  R:{q:'広告の「No.1」や「92%」を判断するとき、何を拠り所にする？',opts:[
+    {t:'誰を対象に、何を、どんな方法で聞いた調査なのかが確認できるかどうか',s:15,fb:'表示と調査の対応関係が判断基準。消費者庁の報告書も、ここを合理的根拠の要件として挙げている。'},
+    {t:'数字が具体的かどうか。「92%」のように細かい数字なら信頼できる',s:0,fb:'数字の細かさは信頼性と無関係。何を分母にした92%かが分からなければ意味を持たない。'},
+    {t:'「当社調べ」と注記があるかどうか。注記があれば誠実な広告だ',s:3,fb:'注記は「調査があった」ことしか示さない。中身が確認できなければ根拠にならない。'},
+    {t:'口コミサイトでの評判',s:6,fb:'補助的には使える。ただ口コミ自体が選別・操作されうるので、調査の中身の代わりにはならない。'}]},
+  A:{q:'広告主側（表示を正当だとする側）の主張と根拠として、検討に値するものを選ぶ（複数可）',opts:[
+    {t:'調査は実際に実施しており、その結果として1位だったことは事実である',ok:true},
+    {t:'注記で「当社調べ」と明示しており、調査主体を隠してはいない',ok:true},
+    {t:'利用者アンケートで「成績が上がった」と答えた保護者が実際に92%いた',ok:true},
+    {t:'他社も同じような表示をしているのだから、問題があるはずがない',ok:false},
+    {t:'広告なのだから、多少の誇張は消費者も織り込んで読んでいる',ok:false}]},
+  B:{q:'相手側（表示を問題視する側）の主張と根拠として、検討に値するものを選ぶ（複数可）',opts:[
+    {t:'「顧客満足度」と読んだ人が思い浮かべる調査（利用者の評価）と、実際の調査（未利用者の印象）が食い違っている',ok:true},
+    {t:'「成績が上がった」が主観の回答であって、実際の成績データではない',ok:true},
+    {t:'調査の対象・方法が広告上で確認できず、消費者が根拠を検証できない',ok:true},
+    {t:'消費者庁は、表示に見合った調査がないNo.1表示を不当表示として措置命令を出している',ok:true},
+    {t:'No.1と名乗る広告は、法律ですべて禁止されている',ok:false}]},
+  W:{q:'このタイプの広告が当たり前になると、社会に何が起きる？',opts:[
+    {t:'各社が競って調査するので、サービスの質が上がる',s:3,fb:'印象調査で1位を取る競争は、サービスの質ではなく調査の設計の競争になる。'},
+    {t:'「No.1」の表示が意味を失い、根拠のある表示まで信じられなくなる。比較の手がかりが一つ消える',s:15,fb:'ミスリーディングな表示の害は、個々の誤解にとどまらない。指標そのものが壊れる。'},
+    {t:'消費者が慣れるので、特に影響はない',s:0,fb:'慣れは、判断を省略することと同じ。省略された判断の分だけ、根拠のない選択が増える。'}]},
+  C:{q:'調査の実態まで分かった。あなたの最終行動は？',opts:[
+    {t:'この広告は判断材料にしない。無料期間で実際に使い、子どもに合うかで決める。表示の根拠は問い合わせてみる',s:15,k:'hold',fb:'表示を鵜呑みにせず、切り捨てもせず、自分で確かめられる情報に判断を移した。'},
+    {t:'No.1は当てにならないと分かったが、初月無料だし、とりあえず契約する',s:5,k:'believe',fb:'無料期間を使うのは合理的。ただ「No.1だから」の代わりの判断基準がまだない。'},
+    {t:'ユウトの父に「騙されるな」と言って、このアプリを候補から完全に外させる',s:6,k:'deny',fb:'広告がミスリーディングであることと、サービスが悪いことは別。判断は根拠に戻して行う。'}]},
+  correctD:'hold', correctC:'hold',
+  verdict:'この広告は、嘘ではないが読んだ人の受け取り方と実態が食い違う「ミスリーディング」な表示です。表示が正しいか誤りかの二択ではなく、「読んだ人が思い浮かべる調査」と「実際に行われた調査」のずれを見抜けたか、そして表示を捨てるのではなく自分で確かめられる根拠に判断を戻せたかが問われました。'
+}];
+
+
+/* =====================================================================
+   キャラクター（すべてオリジナル。SVGで描画）
+   ===================================================================== */
+const CHAR = {
+  guide: {skin:'#F2CDB2',hair:'#2E2A4A',hairStyle:'bob',top:'#3E6B8A',acc:'glasses',mouth:'smile'},
+  haruka:{skin:'#F5D0B5',hair:'#3B2A22',hairStyle:'long',top:'#E8A3A3',acc:'none',mouth:'worry'},
+  dr:    {skin:'#EFC9A9',hair:'#6B6B6B',hairStyle:'short',top:'#FFFFFF',acc:'glasses',mouth:'calm',coat:true},
+  ex:    {skin:'#D9A679',hair:'#1F1F1F',hairStyle:'cap',top:'#5B7C99',acc:'none',mouth:'flat'},
+  mom:   {skin:'#F2CDB2',hair:'#7A5A4A',hairStyle:'bun',top:'#9DB8A0',acc:'none',mouth:'worry'},
+  road:  {skin:'#EFC9A9',hair:'#2E2E2E',hairStyle:'helmet',top:'#F2B233',acc:'none',mouth:'calm'},
+  friend:{skin:'#E9BE9B',hair:'#4A3628',hairStyle:'messy',top:'#3E4A5C',acc:'glasses',mouth:'smile'},
+  parent:{skin:'#EBC3A0',hair:'#2B2B2B',hairStyle:'short',top:'#7C8DA0',acc:'none',mouth:'flat'},
+  staff: {skin:'#F5D0B5',hair:'#8C5A3C',hairStyle:'bob',top:'#C9B7E5',acc:'none',mouth:'calm'},
+  law:   {skin:'#E9BE9B',hair:'#5A5A5A',hairStyle:'side',top:'#6F8F7A',acc:'glasses',mouth:'smile'},
+};
+function avatarSVG(id,size){
+  const c=CHAR[id]||CHAR.friend; const S=size||64;
+  const hairBack={
+    long:`<path d="M18 40 C14 22 26 10 36 10 C46 10 58 22 54 40 L56 66 L16 66 Z" fill="${c.hair}"/>`,
+    bob:`<path d="M17 38 C15 20 26 10 36 10 C46 10 57 20 55 38 L55 52 L17 52 Z" fill="${c.hair}"/>`,
+    bun:`<circle cx="36" cy="14" r="8" fill="${c.hair}"/>`,
+    short:'',cap:'',helmet:'',messy:'',side:''
+  }[c.hairStyle]||'';
+  const hairFront={
+    long:`<path d="M20 30 C22 16 30 12 36 12 C42 12 50 16 52 30 C48 22 42 20 36 20 C30 20 24 22 20 30Z" fill="${c.hair}"/>`,
+    bob:`<path d="M19 32 C20 16 30 11 36 11 C42 11 52 16 53 32 C50 22 43 19 36 19 C29 19 22 22 19 32Z" fill="${c.hair}"/>`,
+    bun:`<path d="M20 30 C22 16 30 13 36 13 C42 13 50 16 52 30 C48 22 42 21 36 21 C30 21 24 22 20 30Z" fill="${c.hair}"/>`,
+    short:`<path d="M20 28 C22 14 30 11 36 11 C42 11 50 14 52 28 C49 20 43 18 36 18 C29 18 23 20 20 28Z" fill="${c.hair}"/>`,
+    messy:`<path d="M19 30 C18 16 28 9 36 11 C44 8 54 16 53 30 C50 22 45 24 40 19 C36 24 30 22 27 26 C25 22 21 25 19 30Z" fill="${c.hair}"/>`,
+    side:`<path d="M20 30 C21 16 29 12 36 12 C43 12 51 15 52 30 C50 22 44 18 34 20 C28 21 23 24 20 30Z" fill="${c.hair}"/>`,
+    cap:`<path d="M18 30 C20 14 30 10 36 10 C42 10 52 14 54 30 Z" fill="${c.hair}"/><path d="M16 29 C18 15 30 9 36 9 C42 9 54 15 56 29 L58 32 L14 32 Z" fill="#2F4F6F"/><rect x="14" y="30" width="44" height="4" rx="2" fill="#243C55"/>`,
+    helmet:`<path d="M16 31 C17 14 30 8 36 8 C42 8 55 14 56 31 Z" fill="#F2B233"/><rect x="13" y="29" width="46" height="5" rx="2.5" fill="#D99A1E"/><rect x="33" y="12" width="6" height="16" rx="3" fill="#F7CB64"/>`
+  }[c.hairStyle]||'';
+  const mouth={
+    smile:`<path d="M30 46 Q36 51 42 46" stroke="#7A4A3A" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+    calm:`<path d="M31 47 Q36 49 41 47" stroke="#7A4A3A" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+    flat:`<path d="M31 47 L41 47" stroke="#7A4A3A" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+    worry:`<path d="M31 48 Q36 45 41 48" stroke="#7A4A3A" stroke-width="2" fill="none" stroke-linecap="round"/>`
+  }[c.mouth];
+  const glasses = c.acc==='glasses'?`<g fill="none" stroke="#333" stroke-width="1.8"><circle cx="30" cy="38" r="5.5"/><circle cx="42" cy="38" r="5.5"/><path d="M35.5 38 L36.5 38"/><path d="M24.5 37 L20 35"/><path d="M47.5 37 L52 35"/></g>`:'';
+  const coat = c.coat?`<path d="M14 72 C16 58 26 54 36 54 C46 54 56 58 58 72 Z" fill="#FFFFFF"/><path d="M30 54 L36 66 L42 54" fill="${c.top}"/><path d="M30 54 L36 66 L42 54 Z" fill="#C9D3E0"/>`:`<path d="M14 72 C16 58 26 54 36 54 C46 54 56 58 58 72 Z" fill="${c.top}"/>`;
+  return `<svg viewBox="0 0 72 72" width="${S}" height="${S}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="36" cy="36" r="36" fill="#EDF0F4"/>
+    ${hairBack}
+    <rect x="30" y="46" width="12" height="10" rx="4" fill="${c.skin}"/>
+    ${coat}
+    <ellipse cx="36" cy="36" rx="15" ry="17" fill="${c.skin}"/>
+    <ellipse cx="21.5" cy="38" rx="2.5" ry="3" fill="${c.skin}"/><ellipse cx="50.5" cy="38" rx="2.5" ry="3" fill="${c.skin}"/>
+    ${hairFront}
+    <circle cx="30" cy="38" r="1.8" fill="#2B2B2B"/><circle cx="42" cy="38" r="1.8" fill="#2B2B2B"/>
+    <path d="M27 33 Q30 31 33 33" stroke="#4A3A30" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M39 33 Q42 31 45 33" stroke="#4A3A30" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    ${mouth}
+    ${glasses}
+  </svg>`;
+}
+
+
+/* =====================================================================
+   難易度：用語集・段階ガイド・記述課題
+   ===================================================================== */
+const GLOSSARY = {
+  '一次情報':'出来事を直接見た人や、確認する権限を持つ機関から出た情報。人づてに聞いた「伝聞」と区別する。',
+  '伝聞':'誰かから聞いた話。「友達が言っていた」のように、元の情報源が確かめられないもの。',
+  '拠り所（ルール）':'判断の基準になるもの。法律、行政のガイドライン、サービスの規約、社会で共有された規範など。「なんとなく」ではなく、何に照らして判断したかを言えるようにする。',
+  '論拠':'主張を支える理由や根拠。「〜だから〜だ」の「〜だから」の部分。',
+  '有力な論拠':'事実や研究、法律、権限のある機関の見解に基づく論拠。拡散数や肩書き、人柄、「全部〜だ」という一般化は有力ではない。',
+  '利益相反':'情報を出す人が、その情報で得をする立場にあること。嘘とは限らないが、割り引いて読む理由になる。',
+  '査読':'研究が発表される前に、同じ分野の専門家が内容を検証する仕組み。査読を経た研究は、体験談より信頼できる根拠になる。',
+  '優良誤認表示':'実際より著しく良いと誤解させる表示。景品表示法で禁じられている。',
+  '合理的な根拠':'表示や主張を裏づける、確認できる資料や調査。「調査した」と言うだけでは足りず、誰に何をどう聞いたかが示せること。',
+  '未確認情報':'本当かもしれないし嘘かもしれない、まだ確かめられていない情報。「デマ」と決めつけるのも早い。',
+  'ミスリーディング':'嘘ではないが、読んだ人が実態と違う受け取り方をするように作られた表現。',
+  '判断の保留':'証拠が足りないうちは決めないこと。「信じる」でも「否定する」でもない第三の選択。',
+  '社会規範':'法律ではないが、社会や業界で共有されている「こうするものだ」という決まり。拠り所になるものと、ならないものがある。'
+};
+const STEPGUIDE = {
+  D:{intro:'まず、この投稿を読んだ直後の自分の判断を決めます。ここでは正解を当てる必要はありません。証拠を見る前に何を選んだかが、あとで「判断の更新」として採点されます。',
+     hint:'まだ何も確かめていない状態で、はっきり決められることは少ないはず。「決めない」も判断のひとつです。',
+     terms:['判断の保留','未確認情報']},
+  R:{intro:'次に、この件の判断の拠り所になるルールを決めます。「ルールを調べる」で読んだ資料の中から、この件に本当に当てはまるものを選びます。関係のない法律や、法的にも科学的にも基準にならない通念が混ざっています。',
+     hint:'拡散数や肩書きは真偽と関係ありません。「誰が確認できる立場か」「表示する側に根拠を示す責任があるか」を考えると、当てはまるルールが絞れます。',
+     terms:['拠り所（ルール）','社会規範','一次情報','合理的な根拠']},
+  A:{intro:'ここでは、投稿した側の言い分を組み立てます。自分が疑っていても、相手の主張を一番強い形で言い直すのが弁護士の型です。ただし、根拠にならないもの（拡散数、肩書き、「医者が黙ったから認めた」など）は選ばないようにします。',
+     hint:'「その人にとっては本当に起きたことかもしれない」「切実な事情がある」のように、事実や背景に基づく言い分が有力です。数の多さや反応は根拠になりません。',
+     terms:['論拠','有力な論拠','利益相反']},
+  B:{intro:'今度は相手側、つまり投稿を疑う側の言い分を組み立てます。ここでも根拠のあるものだけを選びます。「SNSは全部嘘」のような一般化は、疑う側であっても有力な論拠ではありません。',
+     hint:'研究の有無、情報源の特定、権限のある機関の発信、利益相反、削除された声。こうした確かめられる事実に基づく論拠が有力です。',
+     terms:['有力な論拠','査読','伝聞','利益相反']},
+  W:{intro:'この投稿が広がったとき、自分以外の誰にどんな影響が出るかを考えます。自分の損得ではなく、社会の側から見る段階です。',
+     hint:'訂正はデマほど広がらない、指標そのものが壊れる、次の本当の警報が軽視される。個々の誤解より、仕組みへの影響を考えると見えてきます。',
+     terms:['ミスリーディング','未確認情報']},
+  C:{intro:'最後に、証拠と両側の言い分を重ねて、自分の行動を決めます。断罪でも放置でもなく、目の前の人に何をするかに変換するのがこの段階です。',
+     hint:'情報を止めること、確認された情報を届けること、行動を安全側に置くこと。この三つが揃う選択肢を探してください。',
+     terms:['判断の保留']}
+};
+const HARDLINE = {
+  D:'ここでは、読んだ直後の自分の判断を決めて。証拠を見る前の判断だから、あとで変わっていい。',
+  R:'投稿のどこが、どんな決まりに引っかかりそうか。法律の名前は要らない。自分の言葉で書いてから、選択肢で確かめて。',
+  A:'投稿した側の言い分を、いちばん強い形で。右の記録の聞き込みが材料になる。',
+  B:'今度は相手側。決めつけじゃなくて、確かめられることで。',
+  W:'自分の損得は横に置いて、社会の側から見て。',
+  C:'全部重ねて、行動に変えて。目の前の人に何をするか。'
+};
+const HARDWRITE = {
+  R:{label:'投稿のどこが、どんな決まりに引っかかりそうかを書く',
+     how:'法律の名前は要りません。「こういう決まりや約束ごとがあるはずだ」と思うことを、自分の言葉で書きます。右の記録の「投稿」タブに元の投稿が、「ルール」タブに読んだカードがあるので、見ながら書いて構いません。書いてから、下の選択肢で「それはどの決まりだったか」を答え合わせします。',
+     tmpl:'投稿の「［引用］」というところが、「［どんな決まり・約束ごと］」に反していると思う。',
+     ex:'投稿の「本人に聞かずに載せた」というところが、「人の写真は本人の許可なく公開しない」という決まりに反していると思う。',
+     check:['投稿のどの部分かを書いた','どんな決まりに反するかを自分の言葉で書いた','拡散数や肩書きを理由にしていない']},
+  A:{label:'投稿した側の、いちばん強い言い分を根拠つきで書く',
+     how:'自分が疑っていても、相手の言い分をいちばん強い形で書きます。右の記録の「聞き込み」に、相手側にも使える事実が混ざっています。書いてから、下の選択肢で答え合わせをします。',
+     tmpl:'たしかに［投稿者の言い分］はありうる。なぜなら［事実や背景］だから。',ex:'たしかに「みんなに見せたかっただけ」というのはありうる。なぜなら悪気はなく、楽しい写真だったから。',
+     check:['相手の言い分を一番強い形で書いた','根拠（事実・背景）を含めた','拡散数や肩書きを根拠にしていない']},
+  B:{label:'投稿を疑う側の、いちばん強い言い分を根拠つきで書く',
+     how:'「全部うそ」のような決めつけではなく、確かめられる事実や情報源を根拠にします。右の記録の「聞き込み」と「ルール」が材料です。',
+     tmpl:'しかし［疑う理由］。なぜなら［確かめられる事実・情報源］だから。',ex:'しかし本人が嫌がっている。なぜなら、載せるかどうかは写った本人が決めることで、本人は「消して」と言っているから。',
+     check:['確かめられる事実に基づいて書いた','「全部嘘」のような一般化になっていない','情報源や権限のある機関に触れた']},
+  W:{label:'この投稿が広がったとき、誰にどんな影響が出るかを書く',
+     how:'自分の損得ではなく、自分以外の誰にしわ寄せが行くかを書きます。個々の誤解だけでなく、仕組み（訂正が届かない、指標が壊れる、警報が軽視される）への影響まで考えます。',
+     tmpl:'この投稿が広がると、［誰］に［どんな影響］が出る。特に［仕組みへの影響］。',ex:'この投稿が広がると、写された本人に「知らない人に見られる」影響が出る。特に、一度広がった写真は消せないという仕組みの問題がある。',
+     check:['自分以外の誰かへの影響を書いた','個々の誤解だけでなく仕組みへの影響に触れた','訂正が届きにくいことを考慮した']},
+  C:{label:'あなたがこれから取る行動を具体的に書く',
+     how:'断罪でも放置でもなく、目の前の人に対して何をするかを書きます。情報を止める、確かめた情報を届ける、行動を安全側に置く、の三つが揃うかを見ます。',
+     tmpl:'私は［具体的な行動］をする。［情報を止める／確かめた情報を届ける／安全側に置く］ため。',ex:'私は、載せた友達に「本人が嫌がっているから消して」と頼む。本人が嫌がっている情報を止めるため。',
+     check:['情報を止める・届ける・行動を安全側に置く、のどれかを含む','目の前の人に対する具体的な行動になっている','投稿者を断罪する内容だけになっていない']}
+};
+
+/* ルビ（イージーのみ） */
+const RUBY = {'偽計業務妨害':'ぎけいぎょうむぼうがい','景品表示法':'けいひんひょうじほう','特定商取引法':'とくていしょうとりひきほう','災害対策基本法':'さいがいたいさくきほんほう','健康増進法':'けんこうぞうしんほう','医薬品医療機器等法':'いやくひんいりょうききとうほう','薬機法':'やっきほう','個人情報保護法':'こじんじょうほうほごほう','著作権法':'ちょさくけんほう','名誉毀損':'めいよきそん','道路管理者':'どうろかんりしゃ','公正競争規約':'こうせいきょうそうきやく','自主規制':'じしゅきせい','措置命令':'そちめいれい','優良誤認':'ゆうりょうごにん','不実証広告':'ふじっしょうこうこく','利益相反':'りえきそうはん','拠り所':'よりどころ','伝聞':'でんぶん','論拠':'ろんきょ','有力':'ゆうりょく','査読':'さどく','根拠':'こんきょ','誤認':'ごにん','標榜':'ひょうぼう','誇大':'こだい','故意':'こい','澱粉':'でんぷん','衛生':'えいせい','拡散':'かくさん','断定':'だんてい','保留':'ほりゅう','承認':'しょうにん','効能':'こうのう','腫瘍':'しゅよう','摘示':'てきし','毀損':'きそん','権限':'けんげん','苦情':'くじょう','解約':'かいやく','迂回':'うかい','救助':'きゅうじょ','紛争':'ふんそう','証拠':'しょうこ','判定':'はんてい','規範':'きはん','規約':'きやく','通念':'つうねん','慣行':'かんこう','虚偽':'きょぎ','逮捕':'たいほ','処罰':'しょばつ','虚偽':'きょぎ','是正':'ぜせい','誹謗':'ひぼう','老化':'ろうか','注記':'ちゅうき','実態':'じったい','免責':'めんせき','把握':'はあく','検証':'けんしょう','推定':'すいてい','一般化':'いっぱんか','妨害':'ぼうがい','疾患':'しっかん','主治医':'しゅじい','副作用':'ふくさよう','剤':'ざい','崩落':'ほうらく','点検':'てんけん','橋梁':'きょうりょう','喚起':'かんき','公的':'こうてき','出所':'でどころ','管内':'かんない','通行止め':'つうこうどめ','緊急':'きんきゅう','善意':'ぜんい','悪意':'あくい','購入':'こうにゅう','契約':'けいやく','更新':'こうしん','実施':'じっし','調査':'ちょうさ','対象':'たいしょう','比較':'ひかく','要件':'ようけん','整理':'せいり','指摘':'してき','満足度':'まんぞくど','保護者':'ほごしゃ','成績':'せいせき','塾':'じゅく','未確認':'みかくにん','削除':'さくじょ','否定的':'ひていてき','選別':'せんべつ','継続':'けいぞく','健診':'けんしん','数値':'すうち','投稿者':'とうこうしゃ','販売者':'はんばいしゃ','拠':'きょ'};
+const RUBY_RE = new RegExp(Object.keys(RUBY).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
+function rb(s){
+  if(mode!=='easy' || !s) return s;
+  // タグの中は触らない
+  return s.split(/(<[^>]+>)/g).map(seg=>seg.startsWith('<')?seg:seg.replace(RUBY_RE,m=>`<ruby>${m}<rt>${RUBY[m]}</rt></ruby>`)).join('');
+}
+
+let mode='easy';
+function setMode(m){ mode=m; document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('sel',b.dataset.m===m)); document.getElementById('lockNote').style.display='none'; renderSelect(); }
+function modeLabel(){ return {easy:'イージー',normal:'ノーマル',hard:'ハード'}[mode]; }
+function glossHTML(terms){ return '<div class="gloss">'+terms.map(t=>`<details><summary>${t}</summary><p>${GLOSSARY[t]||''}</p></details>`).join('')+'</div>'; }
+
+
+/* =====================================================================
+   会話：タイピング表示と案内役
+   ===================================================================== */
+const REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function typeInto(el, html, speed){
+  // 要素ごとに独立したタイマー。タグを壊さないようテキストノード単位で一文字ずつ。クリックで全文表示
+  if(el._typing){clearInterval(el._typing); el._typing=null;}
+  if(REDUCE){ el.innerHTML=html; return; }
+  const parts=html.split(/(<[^>]+>)/g); let pi=0, ci=0, out='';
+  el.innerHTML=''; el.classList.add('typing');
+  const finish=()=>{ clearInterval(el._typing); el._typing=null; el.innerHTML=html; el.classList.remove('typing'); el.onclick=null; };
+  el.onclick=finish;
+  el._typing=setInterval(()=>{
+    if(pi>=parts.length){ finish(); return; }
+    const seg=parts[pi];
+    if(seg.startsWith('<')){ out+=seg; pi++; }
+    else { out+=seg[ci]||''; ci++; if(ci>=seg.length){pi++;ci=0;} }
+    el.innerHTML=out+'<span class="caret"></span>';
+  }, speed||18);
+}
+function guideSay(boxId, text){
+  const box=document.getElementById(boxId); if(!box) return;
+  box.innerHTML=`<div class="gbubble"><div class="gface">${avatarSVG('guide',56)}</div><div class="gtext"><div class="gname">リコ先輩（法学部生）</div><div class="gbody" id="${boxId}_body"></div></div></div>`;
+  typeInto(document.getElementById(boxId+'_body'), text, 14);
+}
+
+
+/* =====================================================================
+   結末（Cの選択で分岐）と登場人物の反応（Dの選択に対して）
+   ===================================================================== */
+const EPILOGUE = {
+  health:{
+    hold:{who:'haruka',name:'ハルカ',text:'ハルカは母と一緒に主治医に相談した。主治医は粉末の成分表を確認し、「薬と併用しても害はないが、効くという根拠はない」と説明した。母は薬を続けることにした。2週間後、あの投稿は行政の注意喚起で名指しされ、アカウントは消えた。ハルカから「あのとき止めてくれてよかった」と連絡が来た。'},
+    believe:{who:'haruka',name:'ハルカ',text:'母は薬をやめて粉末を始めた。ハルカも最初は「効いてる気がする」と言っていた。3か月後の検査で、腫瘍は大きくなっていた。主治医は治療を再開したが、失った3か月は戻らない。あなたが見せた投稿は、その間に4万リポストされていた。'},
+    none:{who:'haruka',name:'ハルカ',text:'あなたは何も言わなかった。ハルカは一人で悩んで、母は粉末を買った。2か月後、ハルカから「効かなかった。でも解約できなくて、もう一回分払った」と連絡が来た。9,800円が2回。あなたが黙っていた2か月の値段だった。'}
+  },
+  bridge:{
+    hold:{who:'mom',name:'母',text:'50分後、道路管理者が点検完了を発信した。橋は無事だった。あなたは母にその発信をそのまま送り、通行止めの解除を待って迎えに行った。夜、投稿者は「友達の勘違いでした」と訂正を出したが、訂正のリポストは元の投稿の30分の1だった。'},
+    believe:{who:'mom',name:'母',text:'橋を避けた車が迂回路に殺到し、救急車が渋滞に巻き込まれた。橋は無事だった。母は「あなたまでリポストしたの？」と言った。あなたのリポストを見た近所の人が、迂回路を選んだ一人だった。'},
+    deny:{who:'friend',name:'カズキ',text:'投稿者に「デマを流すな」と返信した。投稿者は本気で心配していただけで、返信欄は口論になった。道路管理者の「異常なし」の発信は、その口論の下に埋もれて、母のところには届かなかった。カズキが言った。「結果は合ってたけど、やり方で正しい情報を沈めたね」'}
+  },
+  no1:{
+    hold:{who:'parent',name:'ユウトの父',text:'無料期間で使ってみた。悪くはないが、ユウトには合わなかった。広告主に問い合わせた「調査の対象と方法」には、返事がなかった。ユウトの父は「No.1って、そういうことか」と言って、別の塾の体験に申し込んだ。'},
+    believe:{who:'parent',name:'ユウトの父',text:'「No.1だし」で契約した。初月無料のあと、気づいたら3か月分が引き落とされていた。解約の条件は、申込みの最後の画面の一番下に書いてあった。ユウトの成績は、上がっていなかった。'},
+    deny:{who:'staff',name:'アオイ',text:'「騙されるな」と言って、候補から完全に外させた。半年後、そのアプリは調査をやり直し、実際の利用者の評価で本当に1位になっていた。アオイが言った。「広告が雑だったのと、中身が悪いのは別だったね」。あなたの判断は、根拠に戻っていなかった。'}
+  }
+};
+const REACT = {
+  health:{believe:{who:'haruka',t:'やっぱり！ 母に見せてくる'},hold:{who:'haruka',t:'…そうだよね。決める前に、ちょっと調べようか'},deny:{who:'haruka',t:'え、そんなに言い切れる？ 何か知ってるの？'}},
+  bridge:{believe:{who:'mom',t:'あなたもリポストしたの？ ……迎えに来ないで！'},hold:{who:'mom',t:'分かった。確かめてから連絡して。待ってる'},deny:{who:'friend',t:'断定は早くない？ 画像は怪しいけど、落ちてない証拠もまだないよ'}},
+  no1:{believe:{who:'parent',t:'だよね。No.1なら間違いないよな'},hold:{who:'parent',t:'調べるって、どうやって？ 俺には分からん'},deny:{who:'staff',t:'全部インチキとは限らないよ。うちの調査だって、ちゃんとしたのもあった'}}
+};
+const TITLES=[[85,'パートナー弁護士'],[65,'アソシエイト'],[45,'見習い'],[0,'依頼人']];
+function titleOf(avg){ return TITLES.find(t=>avg>=t[0])[1]; }
+let weakPicked=[]; // 総合用：選んでしまった弱い論拠・拠り所
+
+
+/* =====================================================================
+   聞き込みの質問（ノーマル・ハード）。hi は hints の番号、null ははずれ
+   ===================================================================== */
+const QUESTIONS = {
+  haruka:[
+    {t:'お母さんは今、どういう状況？',hi:0},
+    {t:'この投稿の人、信頼できると思う？',hi:1},
+    {t:'主治医の先生には相談した？',hi:2},
+    {t:'この粉末、どこの会社が作ってるの？',miss:'分かんない。プロフィールのリンク先しか見てない。'},
+    {t:'他にも似た投稿を見た？',miss:'見てない。これが流れてきただけ。'}
+  ],
+  dr:[
+    {t:'「検査結果を見て黙った」って本当にありえますか？',hi:0},
+    {t:'この粉末の成分に、効果を示した研究はありますか？',hi:1},
+    {t:'薬をやめて粉末に切り替えるのは危険ですか？',hi:2},
+    {t:'先生はこの投稿者を知っていますか？',miss:'知りません。私が知っているのは、この成分について公開されている研究の範囲だけです。'},
+    {t:'ハルカのお母さんの病名は？',miss:'私は主治医ではないので、お答えできません。'}
+  ],
+  ex:[
+    {t:'実際に飲んでみてどうだった？',hi:0},
+    {t:'やめるとき、何かあった？',hi:1},
+    {t:'投稿のコメント欄はどうなってる？',hi:2},
+    {t:'味はどんな感じ？',miss:'まあ、普通。抹茶みたいな。それは効くかどうかと関係ないと思うけど。'},
+    {t:'投稿者に会ったことある？',miss:'ないよ。DMで「頑張って続けて」って来ただけ。'}
+  ],
+  mom:[
+    {t:'そっちは大丈夫？ 揺れはどうだった？',hi:0},
+    {t:'橋のこと、近所で何か聞いてる？',hi:1},
+    {t:'今から迎えに行ったほうがいい？',hi:2},
+    {t:'橋の写真、見た？',miss:'見てない。スマホの電池が心配で、ニュースしか見てないの。'},
+    {t:'投稿した人、知ってる人？',miss:'知らない人よ。誰なのそれ。'}
+  ],
+  road:[
+    {t:'管内の橋の点検は始まっていますか？',hi:0},
+    {t:'〇〇大橋の崩落は事実ですか？',hi:1},
+    {t:'点検の結果はどうでしたか？',hi:2},
+    {t:'SNSの投稿について何か把握していますか？',miss:'個別の投稿にはお答えしていません。当アカウントの発信をご確認ください。'},
+    {t:'迂回路はどこですか？',miss:'迂回路の案内は通行止めの確定後に発信します。現時点では未定です。'}
+  ],
+  friend:[
+    {t:'この写真、本物だと思う？',hi:0},
+    {t:'情報源ってどこになってる？',hi:1},
+    {t:'投稿者はわざと嘘をついてると思う？',hi:2},
+    {t:'橋の場所って、うちからどのくらい？',miss:'車で15分くらい。それより写真を見てよ。'},
+    {t:'リポストが1.1万ってすごくない？',miss:'数はそうだね。でも数は本当かどうかとは別だよ。'}
+  ],
+  parent:[
+    {t:'この広告、どう思ってる？',hi:0},
+    {t:'「92%が成績が上がった」って、すごいよね？',hi:1},
+    {t:'「当社調べ」って気にならない？',hi:2},
+    {t:'ユウトはこのアプリ、使いたがってる？',miss:'いや、本人はどれでもいいって。決めるのは俺だから。'},
+    {t:'月5,000円は高くない？',miss:'塾に比べたら安い。それより中身だよ。'}
+  ],
+  staff:[
+    {t:'「満足度No.1」って、どうやって作るんですか？',hi:0},
+    {t:'「92%が成績が上がった」はどういう調査？',hi:1},
+    {t:'それって嘘なんですか？',hi:2},
+    {t:'このアプリの会社、知ってますか？',miss:'知らない。うちの取引先じゃなかったと思う。'},
+    {t:'調査って高いんですか？',miss:'ピンキリ。安いのは数万円。それが答えの質を決めるとも言えるけど。'}
+  ],
+  law:[
+    {t:'No.1って書くのは違法じゃないんですか？',hi:0},
+    {t:'国は何か言っていますか？',hi:1},
+    {t:'見分け方はありますか？',hi:2},
+    {t:'このアプリに苦情は来ていますか？',miss:'個別の事業者への相談件数はお答えできません。'},
+    {t:'契約してしまったら、もう戻せない？',miss:'契約の内容によります。それは別の相談になるので、まず表示の話を整理しましょう。'}
+  ]
+};
+
+/* =====================================================================
+   ハード：プロフィールから質問を推定して自分で聞く
+   profile: 何を知っていそうかの手がかり／ kw: hints の番号ごとのキーワード
+   ===================================================================== */
+
+/* ハード：話題に応じた受けの一言（答えの前に挟む） */
+const LEADS = {
+  haruka:['お母さんのことね。','投稿した人のこと？','先生に話したかって？'],
+  dr:['検査結果の見え方ですね。','効果を示す研究があるか、ですね。','薬をやめることについてですね。'],
+  ex:['飲んでどうだったか、ね。','解約のときの話ね。','コメント欄の話ね。'],
+  mom:['私は大丈夫よ。','橋のこと？','迎えのこと？'],
+  road:['点検の状況についてお答えします。','崩落の事実関係についてお答えします。','点検結果についてお答えします。'],
+  friend:['写真のことね。','情報源のことね。','投稿者がわざとかどうか、ね。'],
+  parent:['この広告ね。','あの92%って数字か。','当社調べ、ね。'],
+  staff:['No.1の作り方ね。','92%のアンケートの話ね。','嘘かどうか、か。'],
+  law:['No.1と書くこと自体について、ですね。','国の見解ですね。','見分け方ですね。']
+};
+
+const PROFILE = {
+  haruka:{topics:['お母さんの今の様子','投稿者がどんな人か','主治医に相談したかどうか'],profile:['投稿を見て迷っている友人。医療の知識はない','母が病気で治療中で、今の様子を知っている','投稿者をフォローしていて、どんな人かを見ている','主治医に相談したかどうかを知っている'],
+          kw:[['母','お母さん','様子','状況','病気','治療','副作用','家族'],['投稿者','投稿した人','フォロワー','信頼','信用','本当','有名','人気'],['主治医','先生','医者','相談','病院','聞いた']]},
+  dr:    {topics:['検査で腫瘍が小さく見えることがあるか','この粉末の効果を示す研究があるか','薬をやめると何が起きるか'],profile:['内科医。ハルカの母の主治医ではないので、個人の患者の話はできない','検査結果の見え方について説明できる','この粉末の成分について、公開されている研究を確認している','薬をやめることの危険について知っている'],
+          kw:[['検査','小さく','黙った','自然','小さくなる','消え','腫瘍'],['研究','論文','証拠','エビデンス','成分','効く','効果','根拠','査読','データ'],['薬をやめ','やめる','中断','切り替え','危険','悪化','進行','リスク','一緒','併用','大丈夫','安全','心配']]},
+  ex:    {topics:['実際に飲んでどうだったか','解約しようとしたときのこと','コメント欄で何があったか'],profile:['半年前に同じ粉末を買った人','3か月飲み続けて、結果を知っている','解約の手続きをしたときのことを覚えている','投稿のコメント欄に書き込んで、その後どうなったかを見ている'],
+          kw:[['飲んで','飲ん','効いた','効果','変化','数値','健診','感想','味','買って','使って','試して','どうだった','どうでした','結果','感じ'],['解約','やめ','返金','続け','6か月','半年','払'],['コメント','口コミ','レビュー','書き込','消え','削除']]},
+  mom:   {topics:['家や体が無事かどうか','橋について近所で聞いたこと','迎えに来てほしいかどうか'],profile:['橋の向こう側に住んでいる。揺れの直後は家にいた','家や体が無事かどうかを話せる','近所の人から橋の話を聞いている','迎えに来てほしいかどうか、気持ちがある'],
+          kw:[['大丈夫','無事','揺れ','怪我','けが','家','様子','状況','平気','元気','そっち','そちら'],['橋','近所','噂','聞いた','落ちた','崩落'],['迎え','行く','来る','帰','通る','車']]},
+  road:  {topics:['点検を始めたかどうか','崩落が事実かどうか','点検の結果'],profile:['道路管理者（国道事務所）の公式アカウント。SNSの個別の投稿には答えない','橋の点検を始めたかどうかを発信している','崩落が事実かどうかを確認する立場にある','点検の結果を発信する'],
+          kw:[['点検','始','開始','状況','管内','通行止め'],['崩落','事実','本当','確認','落ち','SNS','投稿','デマ'],['結果','完了','終わ','異常','解除','安全','どうでした']]},
+  friend:{topics:['写真が本物かどうか','情報源が誰か','投稿者がわざとかどうか'],profile:['画像検索が得意な友人','写真がいつどこのものかを調べた','投稿の文章を細かく読んで、情報源が誰かを見ている','投稿者のアカウントを見て、わざとかどうかを考えている'],
+          kw:[['写真','画像','本物','検索','いつ','どこ','加工','古い'],['情報源','ソース','誰から','友達','伝聞','出所','元'],['わざと','嘘','悪意','善意','故意','本気','投稿者は']]},
+  parent:{topics:['この広告をどう思っているか','92%という数字をどう見ているか','「当社調べ」をどう思っているか'],profile:['ユウトの父。子どもの塾を探していて、比べる時間がない','この広告について自分なりの印象がある','「92%」の数字に惹かれている','「当社調べ」という注記を見ている'],
+          kw:[['広告','どう思','No.1','ナンバーワン','一番','印象'],['92','成績','上がった','パーセント','数字','すごい'],['当社調べ','注記','調べ','小さく','嘘']]},
+  staff: {topics:['満足度No.1がどう作られるか','92%がどういう調査か','それは嘘なのか'],profile:['調査会社の元社員。広告用のアンケートを作っていた','「満足度No.1」の調査の作り方を知っている','「92%が成績が上がった」がどういう調査かを知っている','それが嘘と言えるかどうか、自分の考えがある'],
+          kw:[['満足度','No.1','ナンバーワン','どうやって','作る','作り方','手法','調査'],['92','成績','上がった','アンケート','利用者','パーセント'],['嘘','違法','本当','問題','ずるい','だまし','騙']]},
+  law:   {topics:['No.1と書くのは違法かどうか','国が何を言っているか','見分け方'],profile:['消費生活センターの相談員。個別の事業者のことは言えない','No.1と書くのが違法かどうかを説明できる','国（消費者庁）が何を言っているかを知っている','広告の見分け方を教えられる'],
+          kw:[['違法','法律','禁止','いいの','許され','No.1って','景品','表示'],['国','消費者庁','報告書','調査','行政','言って','指摘'],['見分け','見抜','どうすれば','確認','見方','注意','判断']]}
+};
+
+
+/* =====================================================================
+   採点（SCORING_SPEC.md と同一のロジック）
+   ===================================================================== */
+function scoreRun(sc, ans, evidenceCount){
+  const res={};
+  res.evidence = Math.round(20*Math.min(evidenceCount,9)/9);
+  res.D = ans.D.s;
+  const rsel=ans.R, rok=rsel.filter(o=>o.ok).length;
+  res.R = rsel.length>0 ? Math.round(15*rok/rsel.length) : 0;
+  const selA=ans.A, selB=ans.B;
+  const total=selA.length+selB.length;
+  const strong=selA.filter(o=>o.ok).length+selB.filter(o=>o.ok).length;
+  res.bothSides = (selA.length>0 && selB.length>0) ? 10 : 0;
+  res.quality = total>0 ? Math.round(15*strong/total) : 0;
+  const dk=ans.D.k, ck=ans.C.k;
+  if(ck===sc.correctC){ res.update = (dk==='hold' || dk!==ck) ? 5 : 3; }
+  else { res.update = 0; }
+  res.multi = res.bothSides+res.quality+res.update;
+  res.W = ans.W.s;
+  res.C = ans.C.s;
+  res.total = res.evidence+res.D+res.R+res.multi+res.W+res.C;
+  res.strongRate = total>0 ? strong/total : 0;
+  return res;
+}
+function rank(t){ return t>=85?'弁護士の読み方':t>=65?'両側を見られている':t>=45?'片側に寄っている':'型が身についていない'; }
+
+/* =====================================================================
+   状態と画面
+   ===================================================================== */
+let timerId=null; let hardUnlocked={}; let hardBypass=false;
+let cur=null, evi=0, used={}, eviLog=[], qi=0, ans={}, tmpSel=[], results={}, readRules=new Set(), easyIdx=null, written={};
+const STEPS=['D','R','A','B','W','C'];
+const STEPNAME={D:['Decision — 判断','まず、どう受け止めるか'],R:['Rule — ルール','調べたルールのうち、この件の拠り所になるものはどれか'],A:['Arguments — 発信側','投稿した側の主張と根拠'],B:['Arguments — 相手側','疑う側の主張と根拠'],W:['World — 社会への影響','広がったとき何が起きるか'],C:['Conclusion — 結論と行動','すべてを重ねて、どう動くか']};
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo({top:0});}
+
+function renderSelect(){
+  const el=document.getElementById('scList'); el.innerHTML='';
+  SCENARIOS.forEach(sc=>{
+    const b=document.createElement('button');
+    const r=results[sc.id];
+    b.innerHTML=`<span class="tag ${sc.type}">${sc.typeLabel}</span><h3>${sc.title}</h3><div class="small">${sc.post.who}</div>${r?`<div class="done">解答済み：${r.total}点（${ {easy:'イージー',normal:'ノーマル',hard:'ハード'}[r.mode]}）</div>`:''}`;
+    const locked = (mode==='hard' && !hardUnlocked[sc.id] && !hardBypass);
+    if(locked) b.innerHTML += `<div class="small" style="margin-top:6px;color:var(--red)">ハードは、このシナリオをイージーかノーマルで一度解くと開きます</div>`;
+    b.onclick=()=>{ if(locked){ showLockNote(sc); return; } startScenario(sc); }; el.appendChild(b);
+  });
+  const done=Object.keys(results).length;
+  const tc=document.getElementById('totalCard');
+  if(done===SCENARIOS.length){
+    const sum=SCENARIOS.reduce((a,s)=>a+results[s.id].total,0);
+    const avg=Math.round(sum/SCENARIOS.length);
+    const rate=Math.round(100*SCENARIOS.reduce((a,s)=>a+results[s.id].strongRate,0)/SCENARIOS.length);
+    tc.style.display='block';
+    const wk=weakPicked.length? '<div style="margin-top:10px"><b>あなたが選んでしまった弱い論拠・拠り所</b><ul style="margin:6px 0 0 18px;font-size:.9rem">'+weakPicked.map(w=>`<li>［${w.sc}］${w.kind}：${w.t.replace(/<[^>]+>/g,'')}</li>`).join('')+'</ul><p class="small" style="margin-top:6px">ここに並ぶのは、あなたが「根拠だ」と感じてしまったものの一覧です。次に似た投稿を見たとき、最初に疑うべき自分の癖がここにあります。</p></div>' : '<p class="small" style="margin-top:10px">弱い論拠を一つも選んでいません。両側とも根拠のあるものだけで組み立てられています。</p>';
+    tc.innerHTML=`<div class="eyebrow">Overall</div><h3>3シナリオ総合：平均 ${avg}点 ― 称号「${titleOf(avg)}」</h3><p class="small">有力論拠の選択率（平均）：${rate}%。誤情報・未確認情報・ミスリーディングの3類型で、両側の論拠を並べる型がどこまで安定しているかを示します。</p>${wk}`;
+  } else tc.style.display='none';
+}
+
+function showLockNote(sc){
+  const tc=document.getElementById('lockNote');
+  tc.style.display='block';
+  tc.innerHTML=`<b>${sc.title}のハードはまだ開いていません。</b><p class="small" style="margin-top:6px">ハードは、型を一度通ってから自分の言葉で書く段階です。型を知らないまま書くと、何が良い答えなのかが分からないまま終わります。まずノーマルで解いてから戻ってきてください。</p><div class="row" style="margin-top:8px"><button class="btn" onclick="setMode('normal');document.getElementById('lockNote').style.display='none';renderSelect()">ノーマルで解く</button><span class="spacer"></span><button class="hintbtn" style="margin:0" onclick="hardBypass=true;document.getElementById('lockNote').style.display='none';renderSelect()">型を知っているので、このままハードで</button></div>`;
+  tc.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function startScenario(sc){
+  cur=sc; evi=0; used={}; eviLog=[]; qi=0; ans={}; tmpSel=[]; readRules=new Set(); written={}; weakPicked=weakPicked.filter(w=>w.sc!==sc.title);
+  document.getElementById('invEyebrow').textContent=sc.typeLabel+' ／ '+modeLabel();
+  document.getElementById('askNote').textContent = mode==='easy' ? '' : (mode==='normal' ? '何を聞くかは自分で選ぶ。証拠にならない質問もある。' : 'その人のプロフィールを見て、質問を自分で書く。');
+  document.getElementById('invTitle').textContent=sc.title;
+  document.getElementById('postCard').innerHTML=`<div class="who">${sc.post.who}</div><div class="meta">${sc.post.meta}</div><div class="body">${rb(sc.post.body)}</div><div class="stats">${rb(sc.post.stats)}</div>`;
+  const pe=document.getElementById('people'); pe.innerHTML='';
+  document.getElementById('askbox').style.display='none';
+  sc.people.forEach(p=>{used[p.id]=0; p._usedQ=new Set(); p._askedBack=false;
+    const b=document.createElement('button');b.className='person';b.id='p_'+p.id;
+    b.innerHTML=`<div class="who"><div class="avatar">${avatarSVG(p.id,44)}</div><div><div class="name">${p.name}</div><div class="role">${p.role}</div></div></div><div class="left" id="left_${p.id}">話を聞く（あと3回）</div>`;
+    b.onclick=()=>ask(p); pe.appendChild(b);});
+  document.getElementById('speech').style.display='none';
+  document.getElementById('speechFace').innerHTML='';
+  document.getElementById('speechBody').textContent='誰かをクリックして話を聞いてみよう。';
+  document.getElementById('eviList').innerHTML='<li class="small">まだ何もない。</li>';
+  document.getElementById('eviCount').textContent='0件';
+  document.getElementById('needTxt').textContent='あと6件でルール調べに進める';
+  document.getElementById('toQuiz').disabled=true;
+  go('s-inv');
+}
+function ask(p){
+  if(used[p.id]>=3)return;
+  if(mode==='easy'){ deliver(p, used[p.id]); return; }
+  if(mode==='hard'){ freeAsk(p); return; }
+  // ノーマル：質問を選ぶ
+  const box=document.getElementById('askbox'); box.style.display='block';
+  const qs=QUESTIONS[p.id]; const usedQ=(p._usedQ||=new Set());
+  box.innerHTML=`<div class="who">${p.name}に何を聞く？ <span class="small">（この人にはあと${3-used[p.id]}回）</span></div><div class="qs">${qs.map((q,i)=>`<button class="askq${usedQ.has(i)?' used':''}" ${usedQ.has(i)?'disabled':''} onclick="askQ('${p.id}',${i})">${rb(q.t)}</button>`).join('')}</div>`;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function askQ(pid,i){
+  const p=cur.people.find(x=>x.id===pid); const q=QUESTIONS[pid][i]; p._usedQ.add(i);
+  finishAsk(p,q);
+}
+
+function freeAsk(p){
+  const box=document.getElementById('askbox'); box.style.display='block';
+  const pr=PROFILE[p.id];
+  box.innerHTML=`<div class="who">${p.name}に何を聞く？ <span class="small">（この人にはあと${3-used[p.id]}回）</span></div>
+    <div class="prof"><b>この人について</b><ul>${pr.profile.map(x=>`<li>${rb(x)}</li>`).join('')}</ul></div>
+    <div class="prof" style="background:var(--marker-soft)"><b>話せそうな話題</b><ul>${pr.topics.map(x=>`<li>${rb(x)}</li>`).join('')}</ul></div>
+    <div class="small" style="margin:6px 0">話題を選んで、自分の言葉で聞く。聞き方は自由で、「何か知ってる？」でも順に話してくれる。全く関係ないことを聞くと、1回分が減る。</div>
+    <div class="row"><input id="freeq" placeholder="例：お母さんの様子はどう？ ／ 何か知ってることある？" style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:6px;font-family:var(--body);font-size:.95rem;background:var(--card);color:var(--ink)"><button class="btn" id="freeGo" disabled>聞く</button></div>`;
+  const inp=document.getElementById('freeq'); inp.oninput=()=>{document.getElementById('freeGo').disabled=inp.value.trim().length<4;};
+  inp.onkeydown=(e)=>{ if(e.key==='Enter' && inp.value.trim().length>=4){ e.preventDefault(); document.getElementById('freeGo').click(); } };
+  document.getElementById('freeGo').onclick=()=>{ const q=inp.value.trim(); if(q.length<4)return; confirmFree(p,q); };
+  inp.focus(); box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function confirmFree(p,qtext){
+  const box=document.getElementById('askbox');
+  let c=document.getElementById('freeConfirm'); if(c) c.remove();
+  box.insertAdjacentHTML('beforeend',`<div class="confirm" id="freeConfirm"><div>この内容で${p.name}に聞きますか？</div><div class="cq">「${qtext.replace(/</g,'&lt;')}」</div><div class="row" style="margin-top:8px"><button class="btn ghost" id="freeEdit">書き直す</button><span class="spacer"></span><button class="btn" id="freeSend">聞く</button></div></div>`);
+  const inp=document.getElementById('freeq'), go=document.getElementById('freeGo');
+  inp.disabled=true; go.style.display='none';
+  document.getElementById('freeEdit').onclick=()=>{ document.getElementById('freeConfirm').remove(); inp.disabled=false; go.style.display=''; inp.focus(); };
+  document.getElementById('freeSend').onclick=()=>{ resolveFree(p,qtext); };
+  document.getElementById('freeSend').focus();
+}
+function resolveFree(p,qtext){
+  const pr=PROFILE[p.id]; const qn=qtext.replace(/\s/g,'');
+  const bigrams=s=>{ const t=(s||'').replace(/[^\u3040-\u30ff\u4e00-\u9fff\u30a0-\u30ffA-Za-z0-9]/g,''); const out=new Set(); for(let i=0;i<t.length-1;i++){ const g=t.slice(i,i+2); if(/[\u4e00-\u9fff\u30a0-\u30ff]/.test(g)) out.add(g);} return out; };
+  const qb=bigrams(qn);
+  const STOP=new Set(['こと','です','ます','って','いる','ある','する','した','して','どう','なに','何か','何を','どの','この','その','あの','投稿','この件','について','教え','聞き','知っ','ですか','ました','でしょ','ません','ない','です']);
+  // 各情報のスコア：キーワード（文字数重み）＋ 本文・プロフィールとの2文字重なり
+  let best=-1,bestS=0;
+  pr.kw.forEach((ks,i)=>{
+    let s=ks.filter(k=>qn.includes(k)).reduce((a,k)=>a+k.length*2,0);
+    const hb=bigrams(p.hints[i]+(pr.profile[i+1]||'')+(pr.topics[i]||''));
+    qb.forEach(g=>{ if(hb.has(g) && !STOP.has(g)) s+=1; });
+    if(s>bestS){bestS=s;best=i;}
+  });
+  const OPEN=['何か','なにか','教えて','知ってる','知って','聞かせて','どう思','どんな','話して','様子','状況','全部','ほか','他に','あと'];
+  const isOpen=OPEN.some(k=>qn.includes(k));
+  document.getElementById('askbox').style.display='none';
+  const sp=document.getElementById('speech'); sp.style.display='block'; sp.querySelector('.spk').textContent=p.name+'（'+p.role+'）';
+  document.getElementById('speechFace').innerHTML=avatarSVG(p.id,64);
+  sp.classList.remove('talk'); void sp.offsetWidth; sp.classList.add('talk');
+  const said=k=>eviLog.some(e=>e.text===p.hints[k]);
+  // 絞った質問が当たった
+  if(best>=0 && bestS>=2){
+    if(said(best)){ typeInto(document.getElementById('speechBody'), rb('さっきも言ったけど――'+p.hints[best]), 18); return; }
+    giveHint(p,best); return;
+  }
+  // 開いた質問：まだ話していないことを順に
+  if(isOpen || bestS>=1){
+    const k=[0,1,2].find(i=>!said(i));
+    if(k===undefined){ typeInto(document.getElementById('speechBody'), rb('私が知ってることは、もう全部話したよ。'), 18); return; }
+    giveHint(p,k); return;
+  }
+  // はずれ：回数を消費し、話題を示す
+  used[p.id]++;
+  const miss=['それは分からないな。','うーん、それは私には答えられない。','ごめん、その話は知らない。'][used[p.id]%3];
+  typeInto(document.getElementById('speechBody'), rb(miss+' 私が話せそうなのは、'+pr.topics.join('、')+'、くらいかな。'), 18);
+  afterAsk(p);
+}
+function giveHint(p,k){
+  const hint=p.hints[k]; used[p.id]++; evi++; eviLog.push({who:p.name,text:hint});
+  const lead=(LEADS[p.id]||[])[k]||'';
+  const rest=[0,1,2].filter(i=>i!==k && !eviLog.some(e=>e.text===p.hints[i]));
+  const tail = used[p.id]<3 && rest.length ? `<span class="small" style="display:block;margin-top:6px;color:var(--mut)">（あと「${PROFILE[p.id].topics[rest[0]]}」も聞けそう）</span>` : '';
+  typeInto(document.getElementById('speechBody'), rb(lead+hint)+tail, 18);
+  const list=document.getElementById('eviList'); if(evi===1)list.innerHTML='';
+  const li=document.createElement('li'); li.innerHTML=`<span class="src">${p.name}</span>${rb(hint)}`; list.prepend(li);
+  afterAsk(p);
+}
+function finishAsk(p,q){
+  document.getElementById('askbox').style.display='none';
+  used[p.id]++;
+  const sp=document.getElementById('speech'); sp.style.display='block'; sp.querySelector('.spk').textContent=p.name+'（'+p.role+'）';
+  document.getElementById('speechFace').innerHTML=avatarSVG(p.id,64);
+  sp.classList.remove('talk'); void sp.offsetWidth; sp.classList.add('talk');
+  if(q.hi===undefined || q.hi===null){
+    // はずれ：証拠は増えない、回数だけ減る
+    typeInto(document.getElementById('speechBody'), rb(q.miss), 18);
+  } else {
+    const hint=p.hints[q.hi]; evi++; eviLog.push({who:p.name,text:hint});
+    typeInto(document.getElementById('speechBody'), rb(hint), 18);
+    const list=document.getElementById('eviList'); if(evi===1)list.innerHTML='';
+    const li=document.createElement('li'); li.innerHTML=`<span class="src">${p.name}</span>${rb(hint)}`; list.prepend(li);
+  }
+  afterAsk(p);
+}
+function deliver(p, k){
+  const hint=p.hints[k]; used[p.id]++; evi++; eviLog.push({who:p.name,text:hint});
+  const sp=document.getElementById('speech'); sp.style.display='block'; sp.querySelector('.spk').textContent=p.name+'（'+p.role+'）';
+  document.getElementById('speechFace').innerHTML=avatarSVG(p.id,64);
+  sp.classList.remove('talk'); void sp.offsetWidth; sp.classList.add('talk');
+  typeInto(document.getElementById('speechBody'), rb(hint), 18);
+  const list=document.getElementById('eviList'); if(evi===1)list.innerHTML='';
+  const li=document.createElement('li'); li.innerHTML=`<span class="src">${p.name}</span>${rb(hint)}`; list.prepend(li);
+  afterAsk(p);
+}
+function afterAsk(p){
+  document.getElementById('eviCount').textContent=evi+'件';
+  const leftEl=document.getElementById('left_'+p.id);
+  if(used[p.id]>=3){leftEl.textContent='もう話すことはない';document.getElementById('p_'+p.id).classList.add('done');}
+  else leftEl.textContent=`話を聞く（あと${3-used[p.id]}回）`;
+  const need=6-evi; document.getElementById('needTxt').textContent= need>0?`あと${need}件でルール調べに進める`:'ルール調べに進めます';
+  if(evi>=6)document.getElementById('toQuiz').disabled=false;
+  // 6件に届かない状態で全員に3回聞き切った場合の救済：足りない分は「もう一度整理してみる」で1件ずつ思い出す
+  if(evi<6 && cur.people.every(x=>used[x.id]>=3)){
+    document.getElementById('needTxt').innerHTML=`証拠が${evi}件。<button class="btn ghost" style="padding:4px 10px;font-size:.8rem" onclick="recall()">聞いた話を思い返す（+1件）</button>`;
+  }
+}
+function recall(){
+  // 聞き逃した証拠を1件だけ思い出す（はずれで回数を使い切った場合の救済）
+  for(const p of cur.people){ for(let k=0;k<3;k++){ const t=p.hints[k]; if(!eviLog.some(e=>e.text===t)){ evi++; eviLog.push({who:p.name,text:t}); const list=document.getElementById('eviList'); const li=document.createElement('li'); li.innerHTML=`<span class="src">${p.name}</span>${rb(t)}`; list.prepend(li); afterAsk(p); return; } } }
+}
+const RTYPE={'法律':'law','ガイドライン':'guide','規約':'terms','社会規範':'norm'};
+function startRules(){
+  document.getElementById('rulesEyebrow').textContent=cur.typeLabel+' ／ '+cur.title;
+  const box=document.getElementById('rulesList'); box.innerHTML='';
+  cur.rules.forEach((r,i)=>{
+    const b=document.createElement('button'); b.className='rule'+(readRules.has(i)?' open':''); b.id='rule_'+i;
+    const easyLine = (mode!=='hard' && r.easy) ? `<div class="reasy"><b>ひとことで言うと</b>${rb(r.easy)}</div>` : '';
+    const coach = mode==='easy' ? `<div class="rcoach"><div class="gface" style="width:40px;height:40px">${avatarSVG('guide',40)}</div><div>${rb(r.ok?'この件では判断の基準になるよ。':'これは、この件の基準にはならないと思う。理由を考えてみて。')}</div></div>` : '';
+    b.innerHTML=`<div class="rhead"><span><span class="rt ${RTYPE[r.type]}">${r.type}</span><span class="rs">${rb(r.src)}</span></span><span class="rtoggle" id="rt_${i}">${readRules.has(i)?'閉じる ▲':'開く ▼'}</span></div><div class="rtitle">${rb(r.t)}</div>${easyLine}<div class="rbody"><div class="rfull"><b>くわしく</b>${rb(r.body)}</div>${coach}</div>`;
+    b.onclick=()=>{ b.classList.toggle('open'); const o=b.classList.contains('open'); document.getElementById('rt_'+i).textContent=o?'閉じる ▲':'開く ▼'; if(!readRules.has(i)){readRules.add(i);} updateRulesCount(); };
+    box.appendChild(b);
+  });
+  const rg=document.getElementById('rulesGuide'); rg.innerHTML='';
+  if(mode==='easy') guideSay('rulesGuide', rb('ここでは「ルール」を集めるよ。ルールっていうのは判断の基準になるもの。法律だけじゃなくて、国のガイドラインや、SNSの会社の決まり、それに「こうするものだ」っていう社会の約束ごとも入る。ただし、みんなが思ってるだけで基準にならないものも混ざってる。カードの「開く」を押すと、ひとことの説明と、くわしい説明、それに私のコメントが出るよ。'));
+  else if(mode==='normal') guideSay('rulesGuide', rb('この件に関わりそうなルールを集める段階です。法律、ガイドライン、規約、社会規範が混ざっていて、この件の基準にならないものもあります。カードの「開く」を押すと、ひとことの説明とくわしい説明が出ます。3件以上読むと先に進めます。'));
+  else guideSay('rulesGuide', rb('ルールを集める段階。ここでは言い換えも出さない。カードを開いて、自分で読んで、当てはまるかを判断して。3件以上で先に進める。'));
+  updateRulesCount(); go('s-rules');
+}
+function updateRulesCount(){
+  const n=readRules.size; document.getElementById('rulesCount').textContent=n+'件読んだ'+(n<3?`（あと${3-n}件）`:'');
+  document.getElementById('toQuiz2').disabled = n<3;
+}
+
+
+function toggleHist(){ document.getElementById('qside').classList.toggle('open'); }
+function histTab(btn,id){ document.querySelectorAll('.htab').forEach(b=>b.classList.remove('sel')); btn.classList.add('sel'); ['h-post','h-evi','h-rules','h-ans'].forEach(x=>document.getElementById(x).style.display=(x===id?'block':'none')); }
+function renderHist(){
+  document.getElementById('h-post').innerHTML=`<div class="post" style="border-left:3px solid var(--red);padding-left:10px"><div class="who" style="font-size:.85rem">${cur.post.who}</div><div class="meta">${cur.post.meta}</div><div class="body" style="font-size:.88rem">${rb(cur.post.body)}</div><div class="stats" style="font-size:.78rem">${rb(cur.post.stats)}</div></div>`;
+  const he=document.getElementById('h-evi');
+  he.innerHTML = eviLog.length ? [...eviLog].reverse().map(e=>{const pp=cur.people.find(x=>x.name===e.who); return `<div class="hline"><div class="hf">${pp?avatarSVG(pp.id,28):''}</div><div><div class="hn">${e.who}</div><div class="ht">${rb(e.text)}</div></div></div>`;}).join('') : '<div class="small">聞き込みの記録はまだない。</div>';
+  const hr=document.getElementById('h-rules');
+  const rr=cur.rules.filter((r,i)=>readRules.has(i));
+  hr.innerHTML = rr.length ? rr.map(r=>`<div class="hline"><div><div class="hn"><span class="rt ${RTYPE[r.type]}">${r.type}</span>${rb(r.src)}</div><div class="ht">${rb(mode==='hard'?r.t:(r.easy||r.t))}</div></div></div>`).join('') : '<div class="small">読んだルールはまだない。</div>';
+  const ha=document.getElementById('h-ans');
+  const rows=[];
+  if(ans.D) rows.push(['D',ans.D.t]);
+  if(ans.R) rows.push(['R',ans.R.map(o=>o.src).join('／')]);
+  if(ans.A) rows.push(['A',ans.A.map(o=>o.t).join('／')]);
+  if(ans.B) rows.push(['A',ans.B.map(o=>o.t).join('／')]);
+  if(ans.W) rows.push(['W',ans.W.t]);
+  ha.innerHTML = rows.length ? rows.map(r=>`<div class="hans"><b>${r[0]}</b>${rb(r[1].replace(/<[^>]+>/g,''))}</div>`).join('') : '<div class="small">まだ何も選んでいない。</div>';
+  // 段階に応じて初期タブを切り替え：A/A は聞き込み、R はルール、W/C は自分の選択
+  const L=STEPS[qi]; const first = (mode==='hard' && (L==='R'||L==='A'||L==='B'))?'h-post':(L==='R')?'h-rules':(L==='W'||L==='C')?'h-ans':'h-evi';
+  const btn=[...document.querySelectorAll('.htab')].find(b=>b.getAttribute('onclick').includes(first)); if(btn) histTab(btn,first);
+}
+
+function startQuiz(){
+  qi=0; ans={};
+  document.getElementById('quizEyebrow').textContent=cur.typeLabel+' ／ '+cur.title+' ／ '+modeLabel();
+  const rail=document.getElementById('rail'); rail.innerHTML='';
+  STEPS.forEach((L,i)=>{const d=document.createElement('div');d.className='step';d.id='rs'+i;d.textContent=L==='B'?'A':L;rail.appendChild(d);});
+  renderQ(); go('s-quiz');
+}
+
+function renderQ(){
+  renderHist();
+  const L=STEPS[qi];
+  let q = L==='R' ? {q:'調べたルールのうち、この件の判断の拠り所になるものを選ぶ（複数可）',opts:cur.rules.map(r=>({t:`<span class="rt ${RTYPE[r.type]}">${r.type}</span>${r.t}`,ok:r.ok,src:r.src}))} : cur[L];
+  // イージー：R/A/B は「有力2＋弱い2」の4択で1つ選ぶ
+  easyIdx=null;
+  if(mode==='easy' && (L==='R'||L==='A'||L==='B')){
+    const oks=[],ngs=[]; q.opts.forEach((o,i)=>{(o.ok?oks:ngs).push(i)});
+    easyIdx=[oks[0],ngs[0],oks[1],ngs[1]].filter(i=>i!==undefined);
+    q={q:q.q.replace('（複数可）','').replace('検討に値するものを選ぶ','最も検討に値するものを1つ選ぶ').replace('拠り所になるものを選ぶ','拠り所として最も当てはまるものを1つ選ぶ'),opts:easyIdx.map(i=>q.opts[i])};
+  }
+  // ガイド・用語・ヒント
+  const g=STEPGUIDE[L]; const gb=document.getElementById('guideBox');
+  if(mode==='easy'){ gb.innerHTML='<div id="stepGuide"></div>'+rb(glossHTML(g.terms)); guideSay('stepGuide', rb(g.intro+' ヒントはね、'+g.hint)); }
+  else if(mode==='normal'){ gb.innerHTML=`<div id="stepGuide"></div><button class="hintbtn" id="hintBtn">ヒントを見る／用語を確かめる</button>`; document.getElementById('hintBtn').onclick=function(){ this.remove(); guideSay('stepGuide', g.hint); document.getElementById('guideBox').insertAdjacentHTML('beforeend', glossHTML(g.terms)); }; }
+  else { gb.innerHTML='<div id="stepGuide"></div>'; guideSay('stepGuide', rb(HARDLINE[L])); }
+  // 地震シナリオ：Dで時間の圧力
+  if(timerId){clearInterval(timerId); timerId=null;}
+  const oldT=document.getElementById('timerBox'); if(oldT) oldT.remove();
+  if(cur.id==='bridge' && L==='D' && !REDUCE){
+    document.getElementById('guideBox').insertAdjacentHTML('afterbegin',`<div class="timer" id="timerBox"><div class="tl"><span class="tphone">📱</span> 母から着信中… <span class="tsec" id="tsec">20</span>秒</div><div class="tbar"><div class="tfill" id="tfill"></div></div><div class="small">周りではもう1.1万人がリポストしている。あなたはどうする？</div></div>`);
+    let s=20; const start=Date.now();
+    timerId=setInterval(()=>{ const el=document.getElementById('tsec'); if(!el){clearInterval(timerId);timerId=null;return;}
+      s=Math.max(0,20-Math.floor((Date.now()-start)/1000)); el.textContent=s; document.getElementById('tfill').style.width=(100*s/20)+'%';
+      if(s<=0){ clearInterval(timerId); timerId=null; document.getElementById('timerBox').innerHTML='<div class="tl">着信が切れた。</div><div class="small">時間に追われると、確認を飛ばしたくなる。それがデマの広がり方そのもの。慌てなくていい。落ち着いて選ぼう。</div>'; }
+    },250);
+  }
+  // ハード：記述欄
+  const wb=document.getElementById('writeBox'); const hw=HARDWRITE[L];
+  if(mode==='hard' && hw){
+    wb.innerHTML=`<div class="write"><label>${hw.label}</label><div class="how">${hw.how}</div><div class="tmpl"><b>書き方の型</b>${hw.tmpl}</div><div class="exam"><b>例（別の話：クラスのSNSに友達の写真を無断で載せた件）</b>${hw.ex}</div><textarea id="wtext" placeholder="${hw.tmpl}"></textarea><div class="cnt" id="wcnt">0字（20字以上で下の選択肢が使えるようになります）</div></div>`;
+    const ta=document.getElementById('wtext'); ta.oninput=()=>{const n=ta.value.trim().length; document.getElementById('wcnt').textContent=n+'字'+(n<20?'（20字以上で下の選択肢が使えるようになります）':'　選択肢で答え合わせをしよう'); updateNext();};
+  } else wb.innerHTML='';
+  STEPS.forEach((_,i)=>{const el=document.getElementById('rs'+i);el.className='step'+(i<qi?' doneS':i===qi?' now':'');});
+  const letterEl=document.getElementById('qLetter'); letterEl.textContent=L==='B'?'A':L;
+  letterEl.style.color = L==='A'?'var(--red)':L==='B'?'var(--blue)':'var(--ink)';
+  document.getElementById('qName').textContent=STEPNAME[L][0];
+  document.getElementById('qSub').textContent=STEPNAME[L][1];
+  document.getElementById('qText').innerHTML=rb(q.q);
+  const multi=(L==='A'||L==='B'||L==='R') && mode!=='easy';
+  const box=document.getElementById('opts'); box.innerHTML=''; tmpSel=[];
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button'); b.className='opt'+(multi?'':' radio');
+    b.innerHTML=`<span class="box"></span><span>${rb(o.t)}</span>`;
+    b.onclick=()=>{
+      if(multi){ if(tmpSel.includes(i)) tmpSel=tmpSel.filter(x=>x!==i); else tmpSel.push(i); }
+      else tmpSel=[i];
+      [...box.children].forEach((c,j)=>{c.classList.toggle('sel',tmpSel.includes(j));c.querySelector('.box').textContent=tmpSel.includes(j)?'✓':'';});
+      updateNext();
+    };
+    box.appendChild(b);
+  });
+  const oldMemo=document.getElementById('dmemoBox'); if(oldMemo) oldMemo.remove();
+  if(L==='D' && mode==='hard'){
+    document.getElementById('opts').insertAdjacentHTML('afterend',`<div class="dmemo" id="dmemoBox"><label>一言メモ：なぜそう判断した？（10字以上）</label><input id="dmemo" placeholder="例：体験談だから／まだ何も確かめてないから" maxlength="80"><div class="small">この直感の理由は、最後の結論を出す前と、結果画面でもう一度出てくる。</div></div>`);
+    document.getElementById('dmemo').oninput=updateNext;
+  }
+  if(L==='C' && ans.Dmemo){
+    document.getElementById('guideBox').insertAdjacentHTML('beforeend',`<div class="recall"><b>最初のあなたはこう言っていた</b><div>「${ans.D.t}」― ${ans.Dmemo.replace(/</g,'&lt;')}</div><div class="small">証拠とルールと両側の言い分を通った今、その判断はどうなった？</div></div>`);
+  }
+  document.getElementById('fb').style.display='none'; const rbx=document.getElementById('reactBox'); if(rbx) rbx.remove();
+  document.getElementById('nextBtn').disabled=true;
+  document.getElementById('nextBtn').textContent='決める';
+  document.getElementById('nextBtn').onclick=commit;
+}
+function updateNext(){
+  const ta=document.getElementById('wtext');
+  const okText = !ta || ta.value.trim().length>=20;
+  const dm=document.getElementById('dmemo');
+  const okMemo = !dm || mode!=='hard' || dm.value.trim().length>=10;
+  document.getElementById('nextBtn').disabled = !(tmpSel.length>0 && okText && okMemo);
+}
+function commit(){
+  const L=STEPS[qi]; const q = L==='R' ? {opts:cur.rules} : cur[L]; const fb=document.getElementById('fb');
+  const ta=document.getElementById('wtext'); if(ta) written[L]=ta.value.trim();
+  const dm=document.getElementById('dmemo'); if(dm){ ans.Dmemo=dm.value.trim(); dm.disabled=true; }
+  const pick = easyIdx ? tmpSel.map(i=>easyIdx[i]) : tmpSel;
+  if(L==='R'){
+    const sel=pick.map(i=>q.opts[i]); ans.R=sel;
+    const ok=sel.filter(o=>o.ok).length, ng=sel.length-ok;
+    fb.className='fb'+(ng===0?' good':ok===0?' bad':'');
+    fb.innerHTML=`選んだ${sel.length}件のうち、この件に適用されるルールは<b>${ok}件</b>、拠り所にならないものは<b>${ng}件</b>。<br><span class="small">${ng>0?'拠り所にならないもの：「'+sel.filter(o=>!o.ok).map(o=>o.src).join('」「')+'」— 無関係な法律や、法的にも科学的にも基準にならない通念は、判断の拠り所にならない。':'法律・ガイドライン・規約・規範を、この件に適用されるものだけで組み立てられている。'}</span>`;
+  } else if(L==='A'||L==='B'){
+    const sel=pick.map(i=>q.opts[i]); ans[L]=sel;
+    const strong=sel.filter(o=>o.ok).length, weak=sel.length-strong;
+    fb.className='fb'+(weak===0?' good':strong===0?' bad':'');
+    fb.innerHTML=`選んだ${sel.length}件のうち、有力な論拠は<b>${strong}件</b>、根拠として弱いものは<b>${weak}件</b>。<br><span class="small">${weak>0?'弱い論拠：「'+sel.filter(o=>!o.ok).map(o=>o.t).join('」「')+'」— 拡散数や肩書き、「全部〜だ」という一般化は、根拠の代わりにならない。':'この側の言い分を、根拠のあるものだけで組み立てられている。'}</span>`;
+  } else {
+    const o=q.opts[pick[0]]; ans[L]=o;
+    const max=Math.max(...q.opts.map(x=>x.s));
+    fb.className='fb'+(o.s===max?' good':o.s===0?' bad':'');
+    fb.innerHTML=rb(o.fb);
+    if(L==='D'){
+      const rc=REACT[cur.id][o.k]; const ppl=cur.people.find(x=>x.id===rc.who);
+      fb.insertAdjacentHTML('afterend',`<div class="gbubble react" id="reactBox"><div class="gface">${avatarSVG(rc.who,56)}</div><div class="gtext"><div class="gname">${ppl?ppl.name:''}</div><div class="gbody" id="reactBody"></div></div></div>`);
+      typeInto(document.getElementById('reactBody'), rb(rc.t), 22);
+      if(timerId){clearInterval(timerId); timerId=null; const t=document.getElementById('timerBox'); if(t) t.remove();}
+    }
+  }
+  if(mode==='hard' && written[L]){
+    const chosen = Array.isArray(ans[L]) ? ans[L].map(o=>(o.src||o.t).replace(/<[^>]+>/g,'')).join('／') : ans[L].t;
+    fb.insertAdjacentHTML('beforeend',`<div class="cmp"><div><b>あなたが書いたこと</b><div class="written">${written[L].replace(/</g,'&lt;')}</div></div><div><b>選んだもの</b><div class="written">${chosen}</div></div><div class="small">ずれていたら、そのずれが今日の学びです。結果画面でも見返せます。</div></div>`);
+  }
+  fb.style.display='block';
+  { const html=fb.innerHTML; typeInto(fb, html, 10); }
+  [...document.getElementById('opts').children].forEach(c=>c.onclick=null);
+  const nb=document.getElementById('nextBtn'); nb.disabled=false; nb.textContent= qi<STEPS.length-1?'次へ':'結果を見る'; nb.onclick=nextQ;
+}
+function nextQ(){
+  if(qi<STEPS.length-1){qi++;renderQ();window.scrollTo({top:0});}
+  else showResult();
+}
+function showResult(){
+  const r=scoreRun(cur,ans,evi); results[cur.id]=r; if(mode!=='hard') hardUnlocked[cur.id]=true;
+  document.getElementById('resTitle').innerHTML=cur.title+`<span class="modebadge">${modeLabel()}</span>`;
+  r.mode=mode;
+  document.getElementById('resScore').textContent=r.total;
+  document.getElementById('resRank').textContent=rank(r.total);
+  const rows=[
+    ['証拠の幅',r.evidence,20,false,`${evi}件を収集（最大9件）`],
+    ['D 判断',r.D,5,false,null],['R ルール',r.R,15,false,`適用されるルールの選択率 ${ans.R.length?Math.round(100*ans.R.filter(o=>o.ok).length/ans.R.length):0}%（資料を${readRules.size}件読んだ）`],
+    ['多面性',r.multi,30,true,`両側の検討 ${r.bothSides}/10 ・ 論拠の質 ${r.quality}/15（有力論拠の選択率 ${Math.round(r.strongRate*100)}%）・ 判断の更新 ${r.update}/5`],
+    ['W 社会への影響',r.W,15,false,null],['C 結論と行動',r.C,15,false,null]];
+  const bars=document.getElementById('bars'); bars.innerHTML='';
+  rows.forEach(([n,v,m,mm,sub])=>{
+    const d=document.createElement('div');
+    d.innerHTML=`<div class="bar"><div>${n}</div><div class="track"><div class="fill${mm?' m':''}" style="width:0%"></div></div><div style="text-align:right">${v}/${m}</div></div>${sub?`<div class="sub">${sub}</div>`:''}`;
+    bars.appendChild(d);
+    requestAnimationFrame(()=>setTimeout(()=>{d.querySelector('.fill').style.width=(100*v/m)+'%';},60));
+  });
+  const ep=EPILOGUE[cur.id][ans.C.k] || EPILOGUE[cur.id].hold;
+  document.getElementById('verdict').innerHTML=`<div class="gbubble" style="margin-bottom:12px"><div class="gface">${avatarSVG(ep.who,56)}</div><div class="gtext"><div class="gname">その後 ― ${ep.name}</div><div class="gbody" id="epBody"></div></div></div>`+rb(`<b>このシナリオの読み解き</b><br>${cur.verdict}`);
+  typeInto(document.getElementById('epBody'), rb(ep.text), 16);
+  // 総合用：選んでしまった弱い論拠・拠り所を記録
+  [...ans.A,...ans.B].filter(o=>!o.ok).forEach(o=>weakPicked.push({sc:cur.title,t:o.t,kind:'論拠'}));
+  ans.R.filter(o=>!o.ok).forEach(o=>weakPicked.push({sc:cur.title,t:o.src,kind:'拠り所'}));
+  const det=document.getElementById('resDetail');
+  det.innerHTML=`<b>あなたの選択</b>
+   <p class="small" style="margin-top:6px"><b>D</b> ${ans.D.t}</p>
+   <p class="small"><b>R</b> ${ans.R.map(o=>o.src).join(' ／ ')}</p>
+   <p class="small"><b class="side-a">A（発信側）</b> ${ans.A.map(o=>o.t).join(' ／ ')}</p>
+   <p class="small"><b class="side-b">A（相手側）</b> ${ans.B.map(o=>o.t).join(' ／ ')}</p>
+   <p class="small"><b>W</b> ${ans.W.t}</p>
+   <p class="small"><b>C</b> ${ans.C.t}</p>
+   ${mode==='hard'?'<div style="margin-top:12px"><b>あなたが書いた内容</b>'+STEPS.filter(L=>written[L]).map(L=>`<div class="small" style="margin-top:8px"><b>${L==='B'?'A（相手側）':L==='A'?'A（発信側）':L}</b></div><div class="written">${written[L].replace(/</g,'&lt;')}</div><div class="small">自己チェック：${HARDWRITE[L].check.map(c=>'□ '+c).join('　')}</div>`).join('')+'<div class="row" style="margin-top:8px"><button class="btn ghost" onclick="copyWritten()">書いた内容をコピー</button></div></div>':''}
+   <p class="small" style="margin-top:10px">判断の更新：最初の判断が「${ans.D.t}」${ans.Dmemo?'（そのときの理由：'+ans.Dmemo.replace(/</g,'&lt;')+'）':''}、最終行動が「${ans.C.t}」。${r.update===5?'証拠を見てから決める、または証拠で判断を改める動きができている。':r.update===3?'最初から結論に到達していたが、証拠で判断を動かす過程は見えなかった。':'証拠を集めても、最終行動が根拠と結びついていない。'}</p>`;
+  go('s-result');
+}
+function copyWritten(){
+  const t=STEPS.filter(L=>written[L]).map(L=>`【${L}】${HARDWRITE[L].label}\n${written[L]}`).join('\n\n');
+  navigator.clipboard.writeText(`${cur.title}（ハード）\n\n${t}`).then(()=>alert('コピーしました')).catch(()=>alert('コピーできませんでした'));
+}
+function replay(){startScenario(cur);}
+function backToSelect(){renderSelect();go('s-select');}
+renderSelect();
+</script>
+</body>
+</html>
